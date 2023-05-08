@@ -50,6 +50,7 @@ library(reshape2)
 a)
 Fonte:https://stats.stackexchange.com/questions/262630/what-is-the-distribution-of-the-maximum-of-independent-non-identical-binomial-va
 ```{r}
+
 X_i=sapply(1:6, function(i) (2*(i-1)+1)/36) # P(Z=z)
 
 a=(6:1)
@@ -65,17 +66,11 @@ b)
 War=function(att_units, def_units, dices_att, dices_def){
   while((att_units>0 & def_units>0)){
   
-  if(att_units<3){
-    dices_att=att_units
-  }
   
-  if(def_units<3){
-    dices_def=def_units
-  }
     
   dices=min(dices_att, dices_def)
   att_rand=sort(sample(1:6, min(att_units,3)), decreasing=T)[1:dices]
-  def_rand=sort(sample(1:6, dices_def), decreasing=T)[1:dices]
+  def_rand=sort(sample(1:6, min(def_units,3)), decreasing=T)[1:dices]
   
   att_units=att_units-sum(def_rand>=att_rand)
   def_units= def_units- sum(att_rand>def_rand)
