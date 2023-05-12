@@ -5,12 +5,15 @@ date: "Team Member A, Team Member B, Team Member C"
 output:
   pdf_document:
     toc: yes
+    number_sections: true
   html_document:
     theme: readable
     toc: yes
     code_folding: show
     df_print: paged
 ---
+
+I was about to mara $5$
 
 # Set up 
 
