@@ -24,33 +24,6 @@ library(ggplot2)
 # ... 
 ```
 
-# Exercise 1
-
-A potential solution might be the following... I know that $\mathbb{E}\left[X\right]=\int x f_X(x)dx$ and that $Var(X)\geq 0.$
-
-
-## Point a
-
-Therefore, we can say that
-
-$$Var(X) = \int (x-\mu)^2 f_X(x)dx.$$
-
-## Point b
-
-We can implement also some code:
-
-```{r}
-x <- rnorm(100)
-plot(x)
-```
-
-Comment of my results
-
-# Exercise 2
-
-The other solutions
-
-
 
 # Exercise 4: MC integration
 
