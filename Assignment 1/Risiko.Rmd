@@ -458,11 +458,12 @@ We can find the distribution of $Y=log(X)$ with $X\sim \mathcal{Pareto}(\gamma)$
 $$
 \mathbb{P}(Y<y) = \mathbb{P}(X<e^y) = \int_{1}^{e^y} \gamma x^{-(\gamma +1)} dx = 1-e^{-\gamma y}
 $$
-It means that $F_Y(y) = 1-e^{-\gamma y}$; deriving we obtain $f(y) = \gamma e^{-\gamma * y}$, the support is $S = (0;+\infty)$ because $f(y)$ is in the support of the Pareto $I$ only in that interval. With this PDF we will see that
+It means that $F_Y(y) = 1-e^{-\gamma y}$; deriving we obtain $f(y) = \gamma e^{-\gamma y}$, the support is $S = (0;+\infty)$ because $f(y)$ is in the support of the Pareto $I$ only in that interval. With this PDF we will see that
 $$
 Y\sim \mathcal{E}(\gamma)
 $$
-## point c)
+
+## Point c)
 
 ```{r}
 set.seed(123)
@@ -527,7 +528,7 @@ $$
 X\sim N(\mu = 0, \sigma^2 = 1)
 $$
 
-If we want to calculate $P(X>20)$ we could try to integrate the
+If we want to calculate $\mathbb{P}(X>20)$ we could try to integrate the
 PDF of X in this way: 
 $$
     \mathbb{P}(X>20) = 1- \phi(20)= 1 - \int_{-\infty}^{20} \frac{1}{\sqrt{2\pi}} e^{-\frac{x^2}{2}} dx = \int_{20}^{+\infty}  \frac{1}{\sqrt{2\pi}} e^{-\frac{x^2}{2}} dx 
@@ -581,7 +582,7 @@ numbers from a uniform distribution between 0 and 1/20 that we obtain
 from the change of variable.
 
 $$
-\mathbb{P}(X\>20) \approx \frac{0.05 - 0}{N} \sum_{i=1}^{N}
+\mathbb{P}(X>20) \approx \frac{0.05 - 0}{N} \sum_{i=1}^{N}
 \frac{1}{\sqrt{2\pi}y_i^2} \cdot e^{-\frac{(1/y_i)^2}{2}}
 $$
 
