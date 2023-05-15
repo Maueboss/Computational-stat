@@ -465,49 +465,77 @@ pareto_sampler <- function(n, gamma) {
   return(x)
 }
 
-# Function to generate samples from the logarithmic distribution
-logarithmic_sampler <- function(n, gamma) {
+# Function to generate samples from the exponential distribution
+exponential_sampler <- function(n, gamma) {
   x <- pareto_sampler(n, gamma)  # Generate n samples from a Pareto distribution
-  y <- log(x)  # Transform the Pareto samples to follow a logarithmic distribution
+  y <- log(x)  # Transform the Pareto samples to follow an exponential distribution
   return(y)
 }
 
 # Parameters
-n <- 1000  # Number of samples
-gamma <- 2  # Parameter of the Pareto distribution
-
-# Generate samples from the Pareto and logarithmic distributions
-x_samples <- pareto_sampler(n, gamma)
-y_samples <- logarithmic_sampler(n, gamma)
-
-# Plot histograms
-hist(x_samples, breaks = 30, main = "Pareto Distribution", xlab = "X", freq = FALSE, xlim = c(0, max(x_samples)))
-curve(dpareto(x, scale=1, shape = 2), add= TRUE)
-hist(y_samples, breaks = 30, main = "Exponential Distribution", xlab = "Y", freq = FALSE, xlim = c(min(y_samples), max(y_samples)))
-curve(dexp(x, rate=4), add=TRUE)
-
-# Plot density plots
-curve((gamma * x^-(gamma + 1)), from = 0, to = max(x_samples), col = "blue", lwd = 2, ylab = "Density", main = "Pareto Distribution")
-curve(dexp(x, gamma), from = min(y_samples), to = max(y_samples), col = "red", lwd = 2, ylab = "Density", main = "Logarithmic Distribution")
+n <- 5000  # Number of samples
 ```
+
+```{r, warning = FALSE, message = FALSE}
+gammas <- c(2, 5, 7)  # Different values of gamma to explore
+
+# Generate samples and plot for each value of gamma
+for (gamma in gammas) {
+  # Generate samples from the Pareto distribution
+  x_samples <- pareto_sampler(n, gamma)
+  
+  # Generate samples from the exponential distribution
+  y_samples <- exponential_sampler(n, gamma)
+  
+  # Plot histograms
+  par(mfrow = c(1, 2))
+  hist(x_samples, breaks = 70, main = paste("Pareto Distribution (gamma =", gamma, ")"), col="blue", xlab = "X", freq = FALSE, xlim = c(1, 10))
+  curve(dpareto(x, scale = 1, shape = gamma), col="red", add = TRUE)
+  hist(y_samples, breaks = 30, main = paste("Exponential Distribution (gamma =", gamma, ")"), col="blue", xlab = "Y", freq = FALSE, xlim = c(min(y_samples), max(y_samples)))
+curve(dexp(x, rate = gamma), col="red", add = TRUE, ylim = c(0, max(dexp(y_samples, rate = 1/gamma))))
+}
+```
+
+Increasing Gamma leads to smaller tails in the Pareto distributions, meaning that the probability of observing larger values decreases a lot. The same story holds for the exponential distribution which presents a smaller right tail as gamma increases.
 
 ## point d)
 
+The Pareto cumulative distribution function is defined as:
+
+$F(x) = 1 - \left(\frac{1}{x}\right)^\gamma, \quad x \geq 1$
+
+To compute $\mathbb{P}(X < 5)$ we have to define:
+
+$\mathbb{P}(X < 5) = F(5) = 1 - \left(\frac{1}{5}\right)^\gamma$
+
+Now we just have to substitute a gamma value in this simple computation to find the value for $\mathbb{P}(X < 5)$.
+
+Taking for example $\gamma = (2, 5, 7)$ we find: 
+
+$\mathbb{P}(X < 5) = 1 - \left(\frac{1}{5}\right)^2 = 1 - \frac{1}{25} = \frac{24}{25}=0.96$
+$\mathbb{P}(X < 5) = 1 - \left(\frac{1}{5}\right)^5 = 1 - \frac{1}{3125} \approx0.99968$
+$\mathbb{P}(X < 5) = 1 - \left(\frac{1}{5}\right)^7 = 1 - \frac{1}{78125} \approx0.99998$
+
+These results can be checked via ppareto function:
 
 ```{r}
-# Analytical approach
-gamma <- 2  # Pareto parameter
-p_analytical <- 1 - (1/5)^gamma
-
-# Monte Carlo estimate
-num_samples <- 1000000  # Number of samples
-samples <- rpareto(num_samples, scale=1, shape=gamma)
-p_mc <- mean(samples < 5)
-
-# Output results
-p_analytical
-p_mc
+ppareto(5, shape = gammas, scale=1)
 ```
+
+We now assess the precision of an MC estimate based on our Pareto Sampler, taking $\gamma=2$.
+```{r}
+# Monte Carlo estimate
+gamma = 2
+num = 100000  # Number of samples
+samples = pareto_sampler(num, gamma)
+p_mc = mean(samples < 5)
+standard_error = sd(samples) / sqrt(num)
+# Output results
+p_mc
+standard_error
+```
+
+Running a big but still reasonable amount of samples (100.000) leads to a nice estimate. In particular the MC estimate based on our sampler underestimates the true value of the wanted probability by only a 0.004%, namely 0.95996 against 0.96. The standard error of our estimate is 0.0134.
 
 # Exercise 4: MC integration
 Consider a standard Normal random variable X: 
@@ -558,7 +586,6 @@ mc = function(n, a=0, b=1/20){
   if(a>b){stop("reconsider your interval")}
   
   x = runif(n,a,b)
-  
   mean(f(x)) * (b-a)
   
 }
