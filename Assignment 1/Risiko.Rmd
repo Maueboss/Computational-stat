@@ -1,6 +1,6 @@
 ---
 title: "Final_Assignment"
-author: "Manuel Bottino"
+author: "Manuel Bottino, Patrick Poetto, Jacopo Spagliardi"
 date: "`r Sys.Date()`"
 output:
   pdf_document: 
@@ -11,8 +11,10 @@ fig_caption: yes
 urlcolor: blue
 header-includes:
   - \usepackage{amssymb}
+editor_options: 
+  markdown: 
+    wrap: 72
 ---
-
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
 library(magrittr)
@@ -51,35 +53,33 @@ library(knitr)
 #opts_chunk$set(echo =TRUE, size = 3)
 ```
 
-# Risiko
-
-### Rules:
-
-> Goal of the game -\> You (the attacker) want to conquer your opponent's territory (the defender), and you do so by using your army, made of units.You decide how many units to use in the attack, while the defender uses their available units in the territory.
-
-Battle algorithm 1. both players toss some dice (with six equiprobable faces). In particular, the attacker will throw three dice if the number of units at their disposal exceeds three. The same holds for the defender (we consider the European version, where the defender can toss up to three dice).
-
-2.  they sort their outcomes and compare the maximum values they scored. If the attacker's highest value is strictly greater than the defender's, the attacker LOSES a unit. Otherwise, the defender loses one.
-
-3.  they remove these dice and repeat the operation (comparing the second-highest values and so on). The first player that loses all their units is the loser of the battle.
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
-
+# Simulation problem: RISIKO!
 
 ## Point a)
 
-Given two i.i.d variables $X_1, X_2, Y$ with sample space $\Omega=\{ 1,2,3,4,5,6\}$. We define $M=\max(X_1,X_2)$, our aim is to obtain $P(M>y)$. In other words, the probability that an attacker with two units of defeating a defender with one unit. First of all defint the probability density function of $M$ $$\mathbb{P}(M=m)=2\frac{(m-1)+1}{36}$$
+Given two i.i.d variables $X_1, X_2, Y$ with sample space
+$\Omega=\{ 1,2,3,4,5,6\}$. We define $M=\max(X_1,X_2)$, our aim is to
+obtain $P(M>y)$. In other words, the probability that an attacker with
+two units of defeating a defender with one unit. First of all defint the
+probability density function of $M$
+$$\mathbb{P}(M=m)=2\frac{(m-1)+1}{36}$$
 
-It is easy to see just by looking at some instances. The probability of 3 being the maximum is: - $$\mathbb{P}(m=3)=\frac{1}{6}\frac{2}{6}+ \frac{2}{6}\frac{1}{6}+ \frac{1}{6}\frac{1}{6}$$ In words, the probability of getting 3 with the first dice and any other number lower than three (1,2) for the second ($\frac{1}{6}\frac{2}{6}$) and viceversa ($\frac{2}{6}\frac{1}{6}$), then we consider the probability of both being equal ($\frac{1}{6}\frac{1}{6}$)
+It is easy to see just by looking at some instances. The probability of
+3 being the maximum is: -
+$$\mathbb{P}(m=3)=\frac{1}{6}\frac{2}{6}+ \frac{2}{6}\frac{1}{6}+ \frac{1}{6}\frac{1}{6}$$
+In words, the probability of getting 3 tossing the first dice and any other
+number lower than three (1,2) for the second ($\frac{1}{6}\frac{2}{6}$), the same reasoning applies for the other dice ($\frac{2}{6}\frac{1}{6}$), then we consider the
+probability of both being equal ($\frac{1}{6}\frac{1}{6}$)
 
-Finally, we consider the probability of interest: - $$\mathbb{P}(M>y)=1- \mathbb{P}(M\le y)$$
+Finally, we consider the probability of interest: -
+$$\mathbb{P}(M>y)=1- \mathbb{P}(M\le y)$$
 
-Thus we should consider each possible combination of y and m and compute it: $$
+Thus we should consider each possible combination of y and m and compute
+it:
+$$
 \mathbb{P}(M\le y)=6\frac{1}{36}\frac{1}{6}+5\frac{3}{36}\frac{1}{6}+ 4\frac{5}{36}\frac{1}{6}+3\frac{7}{36}\frac{1}{6}+2\frac{9}{36}\frac{1}{6}+\frac{11}{36}\frac{1}{6}
-$$ Which I have computed using R:
+$$
+Which I have computed using R:
 
 ```{r}
 X_i=sapply(1:6, function(i) (2*(i-1)+1)/36) # P(Z=z)
@@ -93,12 +93,13 @@ X_lessthanorequalto_Y=sapply(1:6, function(i) a[i]*X_i[i]*1/6)
 ## Point b)
 
 ```{r}
-War=function(att_units, def_units){
+War=function(att_units, def_units){ #First let's create a function that simulates
+                                    # a single battle
   while((att_units>0 & def_units>0)){
 
     
   dices_att=min(att_units,3)
-  dices_def=min(def_units,2)
+  dices_def=min(def_units,3)
   dices=min(dices_att, dices_def)
   
   att_rand=sort(sample(1:6, dices_att), decreasing=T)[1:dices]
@@ -131,13 +132,21 @@ Risiko=function(att_units, def_units, sim=1){
 set.seed(123)
 
 a=c(1:14)
-outcomes=outer(a, a, Vectorize(Risiko)) # apply the function Risiko to all possible combination of attackers and defender units from 1 to 14
+outcomes=outer(a, a, Vectorize(Risiko)) # apply the function Risiko to all possible
+                                        # combination of attackers and defender 
+                                        # units from 1 to 14
 
 ```
 
 ## Point d)
 
-Before plotting we ought to point out the fact our table will surely be different from the one computed [on this paper](https://www4.stat.ncsu.edu/~jaosborn/research/RISK.pdf) at table 3. The reason behind this is in the assumptions we are making about the game, the defender can use up to 3 dice in our version, not 2. It is easy to change this assumption in the function and the results will almost coincide.
+Before plotting we ought to point out the fact our table will surely be
+different from the one computed [on this
+paper](https://www4.stat.ncsu.edu/~jaosborn/research/RISK.pdf) at table
+3. The reason behind this is in the assumptions we are making about the
+game, the defender can use up to 3 dice in our version, not 2. It is
+easy to change this assumption in the function and the results will
+almost coincide. Also, we are assuming that the attacker can attack even when his army goes down to 1 unit.
 
 ```{r}
 
@@ -152,25 +161,42 @@ heatmap
 
 ```
 
-> The probability obtained using simulations is higher from the one computed analically in point a. The intuition behind could be the fact that in the first scenario we are computing only one battle (the maximum of $$X_1, X_2$$ against Y). Instead, simulation also includes the possibility for the attacker of losing one unit in the first battle, but then winning the second battle, thus winning what the "war". In other words, simulation includes another chance for the attacker to roll the dice, so it follows an higher probability of winning.
+> The probability obtained using simulations is higher from the one
+> computed analically in point a. The intuition behind could be the fact
+> that in the first scenario we are computing only one battle (the
+> maximum value tossed between $$X_1, X_2$$ against Y). Instead, simulation also includes
+> the possibility for the attacker of losing one unit in the first
+> battle, but then winning the second battle, thus winning what I denoted as
+> "War" function. In other words, simulation includes another chance for the
+> attacker to roll the dice, so it follows an higher probability of
+> winning.
 
 # Montecarlo Simulations I
 
 ## Point a)
 
-An old and naive algorithm for the generation of Normally distributed random numbers is the following:
+An old and naive algorithm for the generation of Normally distributed
+random numbers is the following:
 
 $$
 U_1, \ldots, U_{12} \sim U\left(-\frac{1}{2}, \frac{1}{2}\right);\quad Z =\sum_{i=1}^{12} U_i
 $$
 
-The algorithm generates twelve independent uniform variables between $(-1/2, 1/2)$ and then sets Z as the sum of them. The rationale here is that 12 realizations are usually enough to exploit the CLT. Let's firstly consider the expected value of Z: since our variables are independent and uniformly distributed between $[-1/2, 1/2]$ the expected value of the sum is the sum of the expected value by linearity of the operator.
+The algorithm generates twelve independent uniform variables between
+$(-1/2, 1/2)$ and then sets Z as the sum of them. The rationale here is
+that 12 realizations are usually enough to exploit the CLT. Let's
+firstly consider the expected value of Z: since our variables are
+independent and uniformly distributed between $[-1/2, 1/2]$ the expected
+value of the sum is the sum of the expected value by linearity of the
+operator.
 
 $$
 \mathbb{E}(Z) = E(U_1 + U_2 + \cdots + U_{12}) =\mathbb{E}(U_1)+E(U_2) + \cdots + \mathbb{E}(U_{12}) = 0 + 0 + \cdots + 0 = 0
 $$
 
-Because the expected value of a Uniform random variable is $E(U_i)=\frac{a+b}{2}$ so it is zero in the case of a Uniform centered in the origin. More formally we can write:
+Because the expected value of a Uniform random variable is
+$E(U_i)=\frac{a+b}{2}$ so it is zero in the case of a Uniform centered
+in the origin. More formally we can write:
 
 $$
   \mathbb{E}\left(\sum_{i=1}^{12}U_i \right) = \sum_{i=1}^{12}\mathbb{E}(U_i) = \sum_{i=1}^{12} 0 = 0
@@ -182,7 +208,8 @@ $$
 \mathbb{V}(Z) =  \mathbb{V}(U_1 + U_2 + \cdots + U_{12}) =  \mathbb{V}(U_1) +  \mathbb{V}(U_2) + \cdots +  \mathbb{V}(U_{12}) \qquad+ 2 Cov(U_1, U_2) + 2 {Cov}(U_1, U_3) + \cdots + 2 {Cov}(U_{11}, U_{12})
 $$
 
-Where ${Cov}(U_i, U_j)$ denotes the covariance between $U_i$ and $U_j$, $i\neq j$.
+Where ${Cov}(U_i, U_j)$ denotes the covariance between $U_i$ and $U_j$,
+$i\neq j$.
 
 Since $U_1, U_2, \ldots, U_{12}$ are again independent we have:
 
@@ -197,7 +224,8 @@ $$
 \mathbb{V}(U_1)
 $$
 
-Because the variance of the Uniformm random variable is $$V(U) = \frac{(b-a)^2}{12}$$, we have::
+Because the variance of the Uniformm random variable is
+$$V(U) = \frac{(b-a)^2}{12}$$, we have::
 
 $$
 \mathbb{V}(U_1) =\left(\frac{\frac{1}{2}-\left(-\frac{1}{2}\right)}{\sqrt{12}}\right)^2= \frac{1}{12}
@@ -209,11 +237,14 @@ $$
 \mathbb{V}(Z) = 12 \cdot \frac{1}{12} \\ = 1
 $$
 
-So we proved that $E(Z) = 0$ e \$ Var}(Z) = 1\$.
+So we proved that $E(Z) = 0$ e $Var(Z) = 1$.
 
-## Point b) e c)
+## Point b) and c)
 
-Using histograms, compare the above Normal generator with the Box--Mueller algorithm. Comment on the results, and pay particular attention to tail probabilities (e.g., what happens to the estimate of $$\mathbb{P}(Z>=3)$$).
+Using histograms, compare the above Normal generator with the
+Box--Mueller algorithm. Comment on the results, and pay particular
+attention to tail probabilities (e.g., what happens to the estimate of
+$\mathbb{P}(Z\geq 3)$).
 
 ```{r fig.height=7, fig.width=7}
 # Box-Mueller
@@ -238,10 +269,10 @@ set.seed(123)
 N = rnorm(100000, 0, 1)
 
 par(mfrow = c(4, 2))
-hist(X1, breaks=50, col="blue", main="X1 distribution via Box Mueller algorithm", freq = FALSE )
+hist(X1, breaks=50, col="blue", main="X1 distribution via Box Muller algorithm", freq = FALSE )
 curve(dnorm(x, mean = 0, sd = 1), add = TRUE, col = "red", lwd = 2)
 hist(X1, breaks=100, col="green", main="Tail", xlim=c(3, max(X1)), ylim=c(0, 60))
-hist(X2, breaks=50, col="blue", main="X2 distribution via Box Mueller algorithm", freq = FALSE)
+hist(X2, breaks=50, col="blue", main="X2 distribution via Box Muller algorithm", freq = FALSE)
 curve(dnorm(x, mean = 0, sd = 1), add = TRUE, col = "red", lwd = 2)
 hist(X2, breaks=100, col="green", main="Tail", xlim=c(3, max(X2)), ylim=c(0, 60))
 hist(Z, breaks=50, col="blue", main="Z distribution via naive generator", freq = FALSE)
@@ -257,18 +288,25 @@ X1_tail = mean(X1>3)
 Z_tail = mean(Z>3)
 N_tail = mean(N>3)
 Norm = 1-pnorm(3, 0, 1)
-X1_tail; Z_tail; N_tail; Norm
+cat("Box Muller = ", X1_tail, "\n" , "Uniform sum = ", Z_tail, "\n" , "rnorm = N_tail", N_tail, "\n" , "Normal = ", Norm) 
 
 ```
 
-It can be concluded that the Box Muller algorithm and our generator built by a sum of Uniform distributed random variables are both able to properly approximate a sample drawn from a Normal distribution, but for large numbers (n = 100.000) the Box Mueller Algorithm can better approximate the tails. The R built-in random sampling algorithm "rnorm" is even more precise though.
+It can be concluded that the Box Muller algorithm and our generator
+built by a sum of Uniform distributed random variables are both able to
+properly approximate a sample drawn from a Normal distribution, but for
+large numbers (n = 100.000) the Box Muller Algorithm can better
+approximate the tails. The R built-in random sampling algorithm "rnorm"
+is even more precise though.
 
-Let's now try to see the behavior of our generators drawing S = 1000 samples of size n = 1000 for each method and comparing the results stability.
+Let's now try to see the behavior of our generators drawing S = 1000
+samples of size n = 1000 for each method and comparing the results
+stability.
 
 ```{r}
 set.seed(123)
 
-# Box Mueller 
+# Box Muller 
 n <- 10000
 S1 <- matrix(0, nrow=n, ncol=1000)
 
@@ -311,11 +349,12 @@ ggplot(df, aes(x=sample, y=prob, fill=sample)) +
   scale_fill_manual(values = c("red", "blue", "green")) +
   labs(x="Sample", y="P(X1, Z, N > 3") +
   ggtitle("Boxplots for each vector of 1000 probabilities") +
-  scale_x_discrete(labels = c("Box Mueller", "Uniform Sum", "Rnorm"))
+  scale_x_discrete(labels = c("Box Muller", "Uniform Sum", "Rnorm"))
 
 ```
 
-This result confirm what was inferred before, the box muelle algorithm "beats" the normal generator via summing 12 uniform random variables.
+This result confirm what was inferred before, the Box Muller algorithm
+"beats" the normal generator via summing 12 uniform random variables.
 
 ## Point d)
 
@@ -359,7 +398,7 @@ tail_prob_plot(1000)
 
 ```
 
-Zoom on the tail:
+Zoom:
 
 ```{r}
 tail_prob_plot_lim <- function(sample_size) {
@@ -440,15 +479,25 @@ legend("topright", c("True Distribution", "Box muller", "Z", "N"),
 
 ## Point a)
 
-We are showing that a random variable Y distributed as a Pareto distribution is only the transformation of a uniform U in particular: $Y = U^{-1/\gamma}$ $$\mathbb{P}(Y< y) = \mathbb{P}(U^{-1/\gamma}< y) = \mathbb{P}(U>y^{-\gamma}) =$$ $$ = 1-F_U(y^{-\gamma}) =  1 - \int_{0}^{y^{-\gamma}} 1 dt= 1 - y^{-\gamma}$$
+We are showing that a random variable Y distributed as a Pareto
+distribution is only the transformation of a uniform U in particular:
+$Y = U^{-1/\gamma}$
+$$\mathbb{P}(Y< y) = \mathbb{P}(U^{-1/\gamma}< y) = \mathbb{P}(U>y^{-\gamma}) =$$
+$$ = 1-F_U(y^{-\gamma}) =  1 - \int_{0}^{y^{-\gamma}} 1 dt= 1 - y^{-\gamma}$$
 
-At the end of the day: $F_Y(y) = 1-y^{-\gamma}$ deriving we obtain $f(x) = \gamma x^{-(\gamma +1)}$, the support is $I = (1,+\infty)$ because $f(x)\in (0,1)$ only in $I$
+At the end of the day: $F_Y(y) = 1-y^{-\gamma}$ deriving we obtain
+$f(x) = \gamma x^{-(\gamma +1)}$, the support is $I = (1,+\infty)$
+because $f(x)\in (0,1)$ only in $I$
 
 ## point b)
 
-We can find the distribution of $Y=log(X)$ with $X\sim \mathcal{Pareto}(\gamma)$ in a similar way. $$
+We can find the distribution of $Y=log(X)$ with
+$X\sim Pareto(\gamma)$ in a similar way. $$
 \mathbb{P}(Y<y) = \mathbb{P}(X<e^y) = \int_{1}^{e^y} \gamma x^{-(\gamma +1)} dx = 1-e^{-\gamma y}
-$$ It means that $F_Y(y) = 1-e^{-\gamma y}$; deriving we obtain $f(y) = \gamma e^{-\gamma * y}$, the support is $S = (0;+\infty)$ because $f(y)$ is in the support of the Pareto $I$ only in that interval. With this PDF we will see that 
+$$ It means that $F_Y(y) = 1-e^{-\gamma y}$; deriving we obtain
+$f(y) = \gamma e^{-\gamma * y}$, the support is $S = (0;+\infty)$
+because $f(y)$ is in the support of the Pareto $I$ only in that
+interval. With this PDF we will see that
 $$
 Y\sim \mathcal{E}(\gamma)
 $$
@@ -496,7 +545,10 @@ curve(dexp(x, rate = gamma), col="red", add = TRUE, ylim = c(0, max(dexp(y_sampl
 }
 ```
 
-Increasing Gamma leads to smaller tails in the Pareto distributions, meaning that the probability of observing larger values decreases a lot. The same story holds for the exponential distribution which presents a smaller right tail as gamma increases.
+Increasing Gamma leads to smaller tails in the Pareto distributions,
+meaning that the probability of observing larger values decreases a lot.
+The same story holds for the exponential distribution which presents a
+smaller right tail as gamma increases.
 
 ## point d)
 
@@ -508,21 +560,24 @@ To compute $\mathbb{P}(X < 5)$ we have to define:
 
 $\mathbb{P}(X < 5) = F(5) = 1 - \left(\frac{1}{5}\right)^\gamma$
 
-Now we just have to substitute a gamma value in this simple computation to find the value for $\mathbb{P}(X < 5)$.
+Now we just have to substitute a gamma value in this simple computation
+to find the value for $\mathbb{P}(X < 5)$.
 
-Taking for example $\gamma = (2, 5, 7)$ we find: 
+Taking for example $\gamma = (2, 5, 7)$ we find:
 
-$\mathbb{P}(X < 5) = 1 - \left(\frac{1}{5}\right)^2 = 1 - \frac{1}{25} = \frac{24}{25}=0.96$
-$\mathbb{P}(X < 5) = 1 - \left(\frac{1}{5}\right)^5 = 1 - \frac{1}{3125} \approx0.99968$
+$\mathbb{P}(X < 5) = 1 - \left(\frac{1}{5}\right)^2 = 1 - \frac{1}{25} = \frac{24}{25}=0.96$\n
+$\mathbb{P}(X < 5) = 1 - \left(\frac{1}{5}\right)^5 = 1 - \frac{1}{3125} \approx0.99968$\n
 $\mathbb{P}(X < 5) = 1 - \left(\frac{1}{5}\right)^7 = 1 - \frac{1}{78125} \approx0.99998$
 
-These results can be checked via ppareto function:
+These results can be checked via pareto function:
 
 ```{r}
 ppareto(5, shape = gammas, scale=1)
 ```
 
-We now assess the precision of an MC estimate based on our Pareto Sampler, taking $\gamma=2$.
+We now assess the precision of an MC estimate based on our Pareto
+Sampler, taking $\gamma=2$.
+
 ```{r}
 # Monte Carlo estimate
 gamma = 2
@@ -535,29 +590,34 @@ p_mc
 standard_error
 ```
 
-Running a big but still reasonable amount of samples (100.000) leads to a nice estimate. In particular the MC estimate based on our sampler underestimates the true value of the wanted probability by only a 0.004%, namely 0.95996 against 0.96. The standard error of our estimate is 0.0134.
+Running a big but still reasonable amount of samples (100.000) leads to
+a nice estimate. In particular the MC estimate based on our sampler
+underestimates the true value of the wanted probability by only a
+0.004%, namely 0.95996 against 0.96. The standard error of our estimate
+is 0.0134.
+
 
 # Exercise 4: MC integration
+
 Consider a standard Normal random variable X: 
 \begin{equation}
 X\sim \mathcal{N}(\mu = 0, \sigma^2 = 1)    
 \end{equation}
 
-## Point a
+## Point a)
 
 If we want to calculate $\mathbb{P}(X>20)$ we could try to integrate the PDF of X in this way:
 \begin{equation}
     \mathbb{P}(X>20) = 1 - \Phi(20) = 1 - \int_{-\infty}^{20} \frac{1}{\sqrt{2\pi}} e^{-\frac{x^2}{2}} dx = \int_{20}^{+\infty}  \frac{1}{\sqrt{2\pi}} e^{-\frac{x^2}{2}} dx
 \end{equation}
+
 We immediately see that the integrand function is not so easy to be integrated (it is the son of the Gaussian function $e^{x^2}$). We will try to estimate this with the Monte Carlo method but, although this method is extremely powerful and flexible, there are some situations in which it can fail.
 
-The reason why the Monte Carlo crude method can fail in this case, in particular in the estimation of the quantity $\mathbb{P}(X>20)$, is the structure of this distribution. The standard normal  is continuous long-tailed distribution (extended to infinity and decreasing very slowly), and the probability of getting a value (in this case, 20) very far from the mean ($0$ for definition) is extremely low, but not exactly zero. This means that to obtain an accurate estimate of the probability that this random variable is greater than 20, this method requires a large number of random numbers, which would require a significant amount of computation time and the approximation error could be very large.
+The reason why the Monte Carlo crude method fail in this case, is because the Monte Carlo Method requires a finite interval where the uniform distribution used by this method can generate random samples. In this particular case of the probability density function of a standard normal distribution the support is infinity so we have not got the extreme value where we can generate value. A possible solution will be the change of variable (see point b)
 
-Additionally, the Monte Carlo method requires the functions to be evaluated to be integrated or summed over the entire sampled space. The probability density function of a standard normal distribution does not have an analytical solution and therefore integration would require the use of numerical techniques that would further increase computational complexity.
+Additionally, this function does not have an analytical solution and therefore integration would require the use of numerical techniques that would further increase computational complexity.
 
-Furthermore, the Crude Monte Carlo method uses a uniform distribution to generate random samples, which means that the samples are generated evenly spaced in the specified interval. However, the standard normal distribution has a particular shape this particular shape of the distribution makes it difficult to generate random samples sufficiently far from the mean to estimate the probability of very rare events.
-
-## Point b
+## Point b)
 Considering the change of variable $Y = \frac{1}{X}$ the integral will become:
 \begin{equation}
     \mathbb{P}(X>20) = \mathbb{P}(Y<1/20) = \int_{0}^{1/20}  \frac{1}{\sqrt{2\pi}*y^2} e^{-\frac{(1/y)^2}{2}} dy
@@ -569,6 +629,7 @@ because $f_Y(y) = f_X(g(y)) |\frac{\delta g(y)}{\delta y}|$ where:
     \item $f_X(x) = \frac{1}{\sqrt{2\pi}} e^{-\frac{x^2}{2}}$
 \end{itemize}
 As the first one, this integral has not have an analytic solution so we use the Monte Carlo method to estimate. The idea is to generate N random numbers from a uniform distribution between 0 and 1/20 that we obtain from the variable change. We can do this because now we have finite support where we can generate value.
+
 \begin{equation}
     \mathbb{P}(X>20) \approx \frac{0.05 - 0}{N} \sum_{i=1}^{N} \frac{1}{\sqrt{2\pi}y_i^2} \cdot e^{-\frac{(1/y_i)^2}{2}}
 \end{equation}
@@ -580,58 +641,13 @@ set.seed(1234)
 # Define the PDF of N(0,1)
 f = function(x) 1/(sqrt(2*pi)*x^2)*exp(-(1/x)^2/2)
 
-# Function that generate n MC simulations in the interval (a,b)
-mc = function(n, a=0, b=1/20){
-  
-  if(a>b){stop("reconsider your interval")}
-  
-  x = runif(n,a,b)
-  mean(f(x)) * (b-a)
-  
-}
-
-# Simulate
-mc(1000)
-
-# Function to create the ergodic plot
-ergodic = function(n_max, a=0, b=1/20){
-  
-  x = runif(n_max,a,b)
-  
-  (b-a) * cumsum(f(x))/c(1:n_max)
-  
-}
-# Lauch the function
-erg = ergodic(1000)
-
-# Plot results
-plot(ts(erg))
-```
-The ergodic plot a tool used to assess the convergence of results obtained. Ergodicity is an important property of the Monte Carlo method, which states that the system reaches a statistically representative equilibrium state after a sufficient number of iterations and visualize the convergence of results to the expected value or correct solution. 
-
-##Point c
-Now we try to construct a more efficient estimator using antithetic variables it will be more efficient because it reduces the variance of the estimator because we are using 2 unbiased estimators identically distributed but negatively correlated and for definition the variance decreases. 
-
-```{r}
-# Calculate the SD of each iteration
+# Estimate the sd with a single run
 cumsd_f = function(x){
   
   sapply(2:length(x), function(r) sd(f(x[1:r])))
   
 }
 
-# Implement the ergodic function
-ergodic2 = function(n_max, a=0, b=1/20){
-  
-  x = runif(n_max,a,b)
-  
-  thetahat = (b-a) * cumsum(f(x))/c(1:n_max)
-
-  
-  sdthetahat = (b-a)/sqrt(2:n_max) * cumsd_f(x)
-  
-  return(cbind(thetah = thetahat[-1], sd = sdthetahat))
-}
 
 # Plot the ergodic function and its uncertainty
 plot_ergodic = function(output,theta){
@@ -649,12 +665,7 @@ plot_ergodic = function(output,theta){
   abline(h=theta,col=2)
   
 }
-# use the output of the integrate function as the real value
-theta = integrate(f,0,1/20)
-output = ergodic2(10000)
-plot_ergodic(output,theta = theta[1])
 
-# Repeat everything but using antithetic variables
 MC_ergodic = function(n_max, a=0, b=1/20){
   
   x = runif(n_max,a,b)
@@ -665,6 +676,20 @@ MC_ergodic = function(n_max, a=0, b=1/20){
   return(cbind(thetah = thetahat[-1], sd = sdthetahat))
 }
 
+# use the output of the integrate function as the real value
+theta = integrate(f,0,1/20)
+n = 10000
+MC_res = MC_ergodic(n)
+plot_ergodic(MC_res, theta[1])
+```
+
+The ergodic plot a tool used to assess the convergence of results obtained. Ergodicity is an important property of the Monte Carlo method, which states that the system reaches a statistically representative equilibrium state after a sufficient number of iterations and visualize the convergence of results to the expected value or correct solution. In this case we can see in light blue the estimation of the integral in base of the number of value generate and in dark blue the confidence interval of level 95\%. Compare to the red line, that represent the \textit{real} value given by the \texttt{integrate} function of \texttt{R}, we can see that this value isn't in the confidence interval so we have to implement our method. 
+
+## Point c) and d)
+Now we try to construct a more efficient estimator using antithetic variables it will be more efficient because it reduces the variance of the estimator because we are using 2 unbiased estimators identically distributed but negatively correlated and for definition the variance decreases. 
+
+```{r}
+# Repeat everything but using antithetic variables
 cumsd_AV = function(x,xprime){
   sapply(2:length(x), function(r) 
     sd( (f(x[1:r])+f(xprime[1:r])) /2 ) )
@@ -682,14 +707,11 @@ AV_ergodic = function(n_max, a=0, b=1/20){
   return(cbind(thetah = thetahat[-1], sd = sdthetahat))
 }
 
-
-# Compare results
-MC_res = MC_ergodic(500)
 plot_ergodic(MC_res, theta[1])
 
 
-AV_res = AV_ergodic(n_max = 500)
-A = AV_ergodic(n_max = 500)
+AV_res = AV_ergodic(n_max = n)
+A = AV_ergodic(n_max = n)
 lines(A[,1],type="l",lwd=2,col="orange")
 lines(A[,1] + 1.96 * A[,2],
       type="l",col="red",lwd=2)
@@ -699,21 +721,18 @@ lines(A[,1] - 1.96 * A[,2],
 ```
 
 
-We obtain a more efficient point and interval estimation with a smaller standard deviation and nearest estimation of the integral to the \textit{real} value given by the \texttt{integrate} function of \texttt{R}
+We obtain a more efficient point and interval estimation with a smaller standard deviation and nearest estimation of the integral. In yellow we can see the estimation and in red the corresponding interval. The yellow line is really near the \textit{real} line and this value is in the center of the interval that is close than the blue one. We can see numerically too:
 
 ```{r}
-MC_res[499,]
-AV_res[499,]
+# Numerically
+MC_res[n-1,]
+AV_res[n-1,]
 theta[1]
 ```
+The first \texttt{thetah} is the estimation with MC very smaller than the last value that is the output of \texttt{integrate} function while the second approximation is closer than the \textit{real} value anb the second standard deviation is smaller than the first one too.
 
-
-## Point d
 Finally, we can compare our results to the output of \texttt{R} function that should give the probability that we are looking for, \texttt{pnorm} but it gives the asymptotic result 0. Our method gives a more accurate result.
 
-
 ```{r}
-theta[1]
 1-pnorm(20,0,1)
 ```
-
