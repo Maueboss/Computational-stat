@@ -5,15 +5,12 @@ date: "Team Member A, Team Member B, Team Member C"
 output:
   pdf_document:
     toc: yes
-    number_sections: true
   html_document:
     theme: readable
     toc: yes
     code_folding: show
     df_print: paged
 ---
-
-I was about to mara $5$
 
 # Set up 
 
@@ -24,33 +21,30 @@ library(ggplot2)
 # ... 
 ```
 
-
 # Exercise 4: MC integration
-
-## Point a
 Consider a standard Normal random variable X: 
 \begin{equation}
 X\sim \mathcal{N}(\mu = 0, \sigma^2 = 1)    
 \end{equation}
-\subsection{}
+
+## Point a
+
 If we want to calculate $\mathbb{P}(X>20)$ we could try to integrate the PDF of X in this way:
 \begin{equation}
-    \mathbb{P}(X>20) = 1 - \int_{-\infty}^{20} \frac{1}{\sqrt{2\pi}} e^{-\frac{x^2}{2}} dx = \int_{20}^{+\infty}  \frac{1}{\sqrt{2\pi}} e^{-\frac{x^2}{2}} dx
+    \mathbb{P}(X>20) = 1 - \Phi(20) = 1 - \int_{-\infty}^{20} \frac{1}{\sqrt{2\pi}} e^{-\frac{x^2}{2}} dx = \int_{20}^{+\infty}  \frac{1}{\sqrt{2\pi}} e^{-\frac{x^2}{2}} dx
 \end{equation}
-We immediately see that that function is not so easy to be integrated because that is the son of the Gaussian function $e^{x^2}$. But if we try to estimate this with the Monte Carlo method but although this is extremely powerful and flexible, there are some situations in which it can fail.
+We immediately see that the integrand function is not so easy to be integrated (it is the son of the Gaussian function $e^{x^2}$). We will try to estimate this with the Monte Carlo method but, although this method is extremely powerful and flexible, there are some situations in which it can fail.
 
-The reason why the Monte Carlo crude method can fail in the case of a standard normal distributed random variable X, in particular in the estimation of the quantity $\mathbb{P}(X>20)$ is the structure of this distribution. The standard normal  is continuous long-tailed distribution (extended to infinity and decreasing very slowly), and the probability of getting a value (in this case, 20) very far from the mean ($0$ for definition) is extremely low, but not exactly zero. This means that to obtain an accurate estimate of the probability that this random variable is greater than 20, this method requires a large number of random numbers, which would require a significant amount of computation time and the approximation error could be very large.
+The reason why the Monte Carlo crude method can fail in this case, in particular in the estimation of the quantity $\mathbb{P}(X>20)$, is the structure of this distribution. The standard normal  is continuous long-tailed distribution (extended to infinity and decreasing very slowly), and the probability of getting a value (in this case, 20) very far from the mean ($0$ for definition) is extremely low, but not exactly zero. This means that to obtain an accurate estimate of the probability that this random variable is greater than 20, this method requires a large number of random numbers, which would require a significant amount of computation time and the approximation error could be very large.
 
 Additionally, the Monte Carlo method requires the functions to be evaluated to be integrated or summed over the entire sampled space. The probability density function of a standard normal distribution does not have an analytical solution and therefore integration would require the use of numerical techniques that would further increase computational complexity.
 
-Furthermore, the Crude Monte Carlo method uses a uniform distribution to generate random samples, which means that the samples are generated evenly spaced in the specified interval. However, the standard normal distribution has a particular shape this particular shape of the distribution makes it difficult to generate random samples sufficiently far from the mean to estimate the probability of very rare events. 
-
-
+Furthermore, the Crude Monte Carlo method uses a uniform distribution to generate random samples, which means that the samples are generated evenly spaced in the specified interval. However, the standard normal distribution has a particular shape this particular shape of the distribution makes it difficult to generate random samples sufficiently far from the mean to estimate the probability of very rare events.
 
 ## Point b
 Considering the change of variable $Y = \frac{1}{X}$ the integral will become:
 \begin{equation}
-    \mathbb{P}(X>20) = \mathbb{P}(Y<20) = \int_{0}^{1/20}  \frac{1}{\sqrt{2\pi}*y^2} e^{-\frac{(1/y)^2}{2}} dy
+    \mathbb{P}(X>20) = \mathbb{P}(Y<1/20) = \int_{0}^{1/20}  \frac{1}{\sqrt{2\pi}*y^2} e^{-\frac{(1/y)^2}{2}} dy
 \end{equation}
 because $f_Y(y) = f_X(g(y)) |\frac{\delta g(y)}{\delta y}|$ where:
 \begin{itemize}
@@ -58,7 +52,7 @@ because $f_Y(y) = f_X(g(y)) |\frac{\delta g(y)}{\delta y}|$ where:
     \item $\frac{\delta g(y)}{\delta y}= -\frac{1}{y^2}$
     \item $f_X(x) = \frac{1}{\sqrt{2\pi}} e^{-\frac{x^2}{2}}$
 \end{itemize}
-As the first one, this integral has not have an analytic solution so we use the Monte Carlo method to estimate. The idea is to generate N random numbers from a uniform distribution between 0 and 1/20 that we obtain from the change of variable.
+As the first one, this integral has not have an analytic solution so we use the Monte Carlo method to estimate. The idea is to generate N random numbers from a uniform distribution between 0 and 1/20 that we obtain from the variable change. We can do this because now we have finite support where we can generate value.
 \begin{equation}
     \mathbb{P}(X>20) \approx \frac{0.05 - 0}{N} \sum_{i=1}^{N} \frac{1}{\sqrt{2\pi}y_i^2} \cdot e^{-\frac{(1/y_i)^2}{2}}
 \end{equation}
@@ -67,10 +61,10 @@ As the first one, this integral has not have an analytic solution so we use the 
 rm(list = ls())
 set.seed(1234)
 
+# Define the PDF of N(0,1)
 f = function(x) 1/(sqrt(2*pi)*x^2)*exp(-(1/x)^2/2)
-a = integrate(f,0,1/20)
-n = 100
 
+# Function that generate n MC simulations in the interval (a,b)
 mc = function(n, a=0, b=1/20){
   
   if(a>b){stop("reconsider your interval")}
@@ -81,46 +75,50 @@ mc = function(n, a=0, b=1/20){
   
 }
 
-
+# Simulate
 mc(1000)
 
-
+# Function to create the ergodic plot
 ergodic = function(n_max, a=0, b=1/20){
   
   x = runif(n_max,a,b)
   
-  (b-a) * cumsum(f(x))/c(1:n_max)#seq(1,n_max,by=1)
-  #dplyr::cummean()
+  (b-a) * cumsum(f(x))/c(1:n_max)
+  
 }
-
+# Lauch the function
 erg = ergodic(1000)
+
+# Plot results
 plot(ts(erg))
 ```
+The ergodic plot a tool used to assess the convergence of results obtained. Ergodicity is an important property of the Monte Carlo method, which states that the system reaches a statistically representative equilibrium state after a sufficient number of iterations and visualize the convergence of results to the expected value or correct solution. 
 
 ##Point c
 Now we try to construct a more efficient estimator using antithetic variables it will be more efficient because it reduces the variance of the estimator because we are using 2 unbiased estimators identically distributed but negatively correlated and for definition the variance decreases. 
 
 ```{r}
+# Calculate the SD of each iteration
 cumsd_f = function(x){
   
   sapply(2:length(x), function(r) sd(f(x[1:r])))
   
 }
 
-
+# Implement the ergodic function
 ergodic2 = function(n_max, a=0, b=1/20){
   
   x = runif(n_max,a,b)
   
-  thetahat = (b-a) * cumsum(f(x))/c(1:n_max)#seq(1,n_max,by=1)
-  #dplyr::cummean()
+  thetahat = (b-a) * cumsum(f(x))/c(1:n_max)
+
   
   sdthetahat = (b-a)/sqrt(2:n_max) * cumsd_f(x)
   
   return(cbind(thetah = thetahat[-1], sd = sdthetahat))
 }
 
-
+# Plot the ergodic function and its uncertainty
 plot_ergodic = function(output,theta){
   
   A = output
@@ -136,18 +134,17 @@ plot_ergodic = function(output,theta){
   abline(h=theta,col=2)
   
 }
-
-
+# use the output of the integrate function as the real value
+theta = integrate(f,0,1/20)
 output = ergodic2(10000)
-plot_ergodic(output,theta = a[1])
+plot_ergodic(output,theta = theta[1])
 
-
+# Repeat everything but using antithetic variables
 MC_ergodic = function(n_max, a=0, b=1/20){
   
   x = runif(n_max,a,b)
   
-  thetahat = (b-a) * cumsum(f(x))/c(1:n_max)#seq(1,n_max,by=1)
-  #dplyr::cummean()
+  thetahat = (b-a) * cumsum(f(x))/c(1:n_max)
   sdthetahat = (b-a)/sqrt(2:n_max) * cumsd_f(x)
   
   return(cbind(thetah = thetahat[-1], sd = sdthetahat))
@@ -163,21 +160,17 @@ AV_ergodic = function(n_max, a=0, b=1/20){
   x        = runif(n_max,a,b)
   xprime   = a+b-x
   h = (f(x) + f(xprime))/2
-  thetahat = (b-a) * cumsum(h)/c(1:n_max)#seq(1,n_max,by=1)
-  #dplyr::cummean()
+  thetahat = (b-a) * cumsum(h)/c(1:n_max)
   
   sdthetahat = (b-a)/sqrt(2:n_max) * cumsd_AV(x,xprime)
-  
-  # same as 
-  # sapply(2:n_max, function(q) sd(f(x[1:q])+f(xprime[1:q])))/2
   
   return(cbind(thetah = thetahat[-1], sd = sdthetahat))
 }
 
 
-a = integrate(f,0,1/20)
+# Compare results
 MC_res = MC_ergodic(500)
-plot_ergodic(MC_res,a[1])
+plot_ergodic(MC_res, theta[1])
 
 
 AV_res = AV_ergodic(n_max = 500)
@@ -196,19 +189,18 @@ We obtain a more efficient point and interval estimation with a smaller standard
 ```{r}
 MC_res[499,]
 AV_res[499,]
-a[1]
+theta[1]
 ```
 
 
-##Point d
+## Point d
 Finally, we can compare our results to the output of \texttt{R} function that should give the probability that we are looking for, \texttt{pnorm} but it gives the asymptotic result 0. Our method gives a more accurate result.
 
 
 ```{r}
-a[1]
+theta[1]
 1-pnorm(20,0,1)
 ```
-
 
 
 
