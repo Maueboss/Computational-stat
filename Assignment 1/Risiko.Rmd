@@ -571,7 +571,7 @@ $$\mathbb{P}(X < 5) = 1 - \left(\frac{1}{5}\right)^5 = 1 - \frac{1}{3125} \appro
 
 $$\mathbb{P}(X < 5) = 1 - \left(\frac{1}{5}\right)^7 = 1 - \frac{1}{78125} \approx0.99998$$
 
-These results can be checked via pareto function:
+These results can be checked via ppareto function:
 
 ```{r}
 ppareto(5, shape = gammas, scale=1)
@@ -683,9 +683,16 @@ theta = integrate(f,0,1/20)
 n = 10000
 MC_res = MC_ergodic(n)
 plot_ergodic(MC_res, theta[1])
+legend("topright", 
+       legend = c("Expected Value", "Integral Estimate", "95% C.I."),
+       lty = c(1, 1, 1),
+       col = c("red", "lightblue", "darkblue"),
+       lwd = c(2, 2, 2),
+       bty = "n")
+title(xlab = "Simulations", ylab = "P(Y<20)", line = 2, cex.axis = 5.2)
 ```
 
-The ergodic plot a tool used to assess the convergence of results obtained. Ergodicity is an important property of the Monte Carlo method, which states that the system reaches a statistically representative equilibrium state after a sufficient number of iterations and visualize the convergence of results to the expected value or correct solution. In this case we can see in light blue the estimation of the integral in base of the number of value generate and in dark blue the confidence interval of level 95\%. Compare to the red line, that represent the \textit{real} value given by the \texttt{integrate} function of \texttt{R}, we can see that this value isn't in the confidence interval so we have to implement our method. 
+The ergodic plot a tool used to assess the convergence of results obtained. Ergodicity is an important property of the Monte Carlo method, which states that the system reaches a statistically representative equilibrium state after a sufficient number of iterations and visualize the convergence of results to the expected value or correct solution. In this case we can see in light blue the integral estimate on the number of generated values basis and in dark blue the confidence interval at level 95\%. Compare to the red line, that represent the \textit{real} value given by the \texttt{integrate} function of \texttt{R}, we can see that this value isn't in the confidence interval so we have to implement our method. 
 
 ## Point c) and d)
 Now we try to construct a more efficient estimator using antithetic variables it will be more efficient because it reduces the variance of the estimator because we are using 2 unbiased estimators identically distributed but negatively correlated and for definition the variance decreases. 
@@ -710,6 +717,13 @@ AV_ergodic = function(n_max, a=0, b=1/20){
 }
 
 plot_ergodic(MC_res, theta[1])
+legend("topright", 
+       legend = c("A.V.M.C. estimate", "95% A.V. MC C.I.","MC Crude estimte", "95% MC C.I.", "real line"),
+       lty = c(1, 1, 1, 1, 1),
+       col = c("orange", "red", "lightblue", "darkblue", "red"),
+       lwd = c(2, 2, 2, 2, 1),
+       bty = "n")
+title(xlab = "Simulations", ylab = "P(Y<20)", line = 2, cex.axis = 5.2)
 
 
 AV_res = AV_ergodic(n_max = n)
@@ -719,7 +733,6 @@ lines(A[,1] + 1.96 * A[,2],
       type="l",col="red",lwd=2)
 lines(A[,1] - 1.96 * A[,2],
       type="l",col="red",lwd=2)
-
 ```
 
 
