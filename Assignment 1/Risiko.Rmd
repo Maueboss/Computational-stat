@@ -1,5 +1,5 @@
 ---
-title: "Final_Assignment"
+title: "Assignment 1"
 author: "Manuel Bottino, Patrick Poetto, Jacopo Spagliardi"
 date: "`r Sys.Date()`"
 output:
