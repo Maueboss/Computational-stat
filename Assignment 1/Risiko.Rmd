@@ -179,34 +179,34 @@ $$
 Looking at the variance of Z:
 
 $$
-\mathbb{Var}(Z) =  \mathbb{Var}(U_1 + U_2 + \cdots + U_{12}) =  \mathbb{Var}(U_1) +  \mathbb{Var}(U_2) + \cdots +  \mathbb{Var}(U_{12}) \qquad+ 2 Cov(U_1, U_2) + 2 \mathbb{Cov}(U_1, U_3) + \cdots + 2 \mathbb{Cov}(U_{11}, U_{12})
+\mathbb{V}(Z) =  \mathbb{V}(U_1 + U_2 + \cdots + U_{12}) =  \mathbb{V}(U_1) +  \mathbb{V}(U_2) + \cdots +  \mathbb{V}(U_{12}) \qquad+ 2 Cov(U_1, U_2) + 2 {Cov}(U_1, U_3) + \cdots + 2 {Cov}(U_{11}, U_{12})
 $$
 
-Where $\mathbb{Cov}(U_i, U_j)$ denotes the covariance between $U_i$ and $U_j$, $i\neq j$.
+Where ${Cov}(U_i, U_j)$ denotes the covariance between $U_i$ and $U_j$, $i\neq j$.
 
 Since $U_1, U_2, \ldots, U_{12}$ are again independent we have:
 
 $$
-\mathbb{Cov}(U_i, U_j) = 0 \quad \forall i \neq j
+{Cov}(U_i, U_j) = 0 \quad \forall i \neq j
 $$
 
 Therefore,
 
 $$
-\mathbb{Var}(Z) = \mathbb{Var}(U_1) + \mathbb{Var}(U_2) + \cdots + \mathbb{Var}(U\_{12}) \\ = 12\cdot
-\mathbb{Var}(U_1)
+\mathbb{V}(Z) = \mathbb{V}(U_1) + \mathbb{V}(U_2) + \cdots + \mathbb{V}(U\_{12}) \\ = 12\cdot
+\mathbb{V}(U_1)
 $$
 
 Because the variance of the Uniformm random variable is $$V(U) = \frac{(b-a)^2}{12}$$, we have::
 
 $$
-\mathbb{Var}(U_1) =\left(\frac{\frac{1}{2}-\left(-\frac{1}{2}\right)}{\sqrt{12}}\right)^2= \frac{1}{12}
+\mathbb{V}(U_1) =\left(\frac{\frac{1}{2}-\left(-\frac{1}{2}\right)}{\sqrt{12}}\right)^2= \frac{1}{12}
 $$
 
 Therefore,
 
 $$
-\mathbb{Var}(Z) = 12 \cdot \frac{1}{12} \\ = 1
+\mathbb{V}(Z) = 12 \cdot \frac{1}{12} \\ = 1
 $$
 
 So we proved that $E(Z) = 0$ e \$ Var}(Z) = 1\$.
