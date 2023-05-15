@@ -565,9 +565,11 @@ to find the value for $\mathbb{P}(X < 5)$.
 
 Taking for example $\gamma = (2, 5, 7)$ we find:
 
-$\mathbb{P}(X < 5) = 1 - \left(\frac{1}{5}\right)^2 = 1 - \frac{1}{25} = \frac{24}{25}=0.96$\n
-$\mathbb{P}(X < 5) = 1 - \left(\frac{1}{5}\right)^5 = 1 - \frac{1}{3125} \approx0.99968$\n
-$\mathbb{P}(X < 5) = 1 - \left(\frac{1}{5}\right)^7 = 1 - \frac{1}{78125} \approx0.99998$
+$$\mathbb{P}(X < 5) = 1 - \left(\frac{1}{5}\right)^2 = 1 - \frac{1}{25} = \frac{24}{25}=0.96$$
+
+$$\mathbb{P}(X < 5) = 1 - \left(\frac{1}{5}\right)^5 = 1 - \frac{1}{3125} \approx0.99968$$
+
+$$\mathbb{P}(X < 5) = 1 - \left(\frac{1}{5}\right)^7 = 1 - \frac{1}{78125} \approx0.99998$$
 
 These results can be checked via pareto function:
 
