@@ -42,7 +42,12 @@ library(class)
 library(reshape2)
 library(sads)
 library(knitr)
+library(latex2exp)
+library(GGally)
+library(combinat)
 ```
+
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -70,60 +75,91 @@ df=data.frame(scale(df))
 ```
 
 ```{r}
-x=cov(df)
+sample_cov=cov(df)
 cor(df)
 # We can get the same result using cov2cor
-cov2cor(x)
+cov2cor(sample_cov)
 ```
-They are equal. Fonte: https://math.stackexchange.com/questions/3780344/under-what-conditions-will-the-covariance-matrix-be-identical-to-the-correlation
+Since we have scaled all the columns with variance equal to 1, it implies that the covariance-variance matrix is equal to the correlation matrix. Fonte: https://math.stackexchange.com/questions/3780344/under-what-conditions-will-the-covariance-matrix-be-identical-to-the-correlation
 
 ## Point c)
 ```{r}
 
-cov_var_sample=array(NA, dim=c(6,6,10))
-for(i in 1:10){
-cov_var_sample[,,i]=cov(data.frame(t(replicate(10, slice_sample(df,n=nrow(df), replace=TRUE)))[i,]))
+B=1000
+
+cov_var_sample=array(NA, dim=c(ncol(df),ncol(df),B))
+
+for(i in 1:B){
+  cov_var_sample[,,i]=cov(slice_sample(df,n=nrow(df), replace=TRUE))
 }
 
+theta_hat_bar=apply(cov_var_sample, c(1, 2), mean)
 se_cov_var=apply(cov_var_sample, c(1, 2), sd)
 
+```
 
+Confidence intervals
+1. A first method consist on using the fact that, as ths sample size n grows large $\frac{\hat \theta - \theta}{SE_B(\hat \theta)} \approx N(0,1)$
+```{r}
+lower_bound=sample_cov+qnorm(c(0.025), mean=0, sd=1)*se_cov_var
+upper_bound=sample_cov+qnorm(c(0.975), mean=0, sd=1)*se_cov_var
+```
 
-D2SUB    <- reshape2::melt(bootstrap_df_playingtime)
-ggplot_playingtime = ggplot()+
-  stat_ecdf(aes(x=D2SUB$value,group = D2SUB$Var2, col = "Bootstrap"))+
-    stat_ecdf(aes(x=df$playingtime,col="Sample"),lwd=0.4)+
-    xlab("Sample")+ggtitle("CDFs")+ylab("F")+
-      scale_color_manual("",values = c("lightgray",1,4))+
-  theme(text = element_text(size=14),legend.position = "bottom")
+2. Use the quantile of the bootstrap sampling distribution, this method is considered more robust than the one before
+```{r}
+boot_sample_variance <- data.frame(matrix(nrow = 6, ncol = 6))
+colnames(boot_sample_variance) <- c("maxplayers", "playingtime", "minage", "average_rating", "total_owners", "average_weight")
+
+for(i in 1:6){
+  for(j in 1:6){
+    boot_sample_variance[i,j]=list(list(cov_var_sample[i,j,]))
+  }
+}
+boot_sample_variance_ci <- data.frame(matrix(nrow = 6, ncol = 6))
+colnames(boot_sample_variance_ci) <- c("maxplayers", "playingtime", "minage", "average_rating", "total_owners", "average_weight")
+
+for(i in 1:6){
+  for(j in 1:6){
+    boot_sample_variance_ci[i,j]=list(list(quantile(boot_sample_variance[i,j][[1]], probs=c(0.025,0.975))))
+  }
+}
+```
+
+3. Using as assumption the fact that the behavior of the bias $\theta - \hat \theta$ is the same as $\hat \theta - \hat \theta^*$, we can compute the confidence interval of the bias-corrected estimate
+```{r}
+boot_sample_variance_ci_bias <- data.frame(matrix(nrow = 6, ncol = 6))
+colnames(boot_sample_variance_ci) <- c("maxplayers", "playingtime", "minage", "average_rating", "total_owners", "average_weight")
+
+for(i in 1:6){
+  for(j in 1:6){
+    boot_sample_variance_ci_bias[i,j]=list(list(2*sample_cov[i,j]-quantile(boot_sample_variance[i,j][[1]], probs=c(0.975,0.025))))
+  }
+}
+
 ```
 
 
 ```{r}
-x=var(df$maxplayers)*(2/(nrow(df)-1))^{1/2}
 
+plot_boot_sample_ci = function(row, column){
+  ggplot()+
+  geom_histogram(aes(x=boot_sample_variance[row,column][[1]]),alpha=.4,col=4,fill="white",bins=25)+
+  geom_vline(aes(xintercept = sample_cov[row,column]) ,col=1, lwd = 1)+
+  geom_vline(aes(xintercept = boot_sample_variance_ci[row, column][[1]][1]) ,col="orange", lwd = 1)+
+  geom_vline(aes(xintercept = boot_sample_variance_ci[row, column][[1]][2]) ,col="orange", lwd = 1)+
+  geom_vline(aes(xintercept = boot_sample_variance_ci_bias[row, column][[1]][1]) ,col="red", lwd = 1)+
+  geom_vline(aes(xintercept = boot_sample_variance_ci_bias[row, column][[1]][2]) ,col="red", lwd = 1)+
+  geom_vline(aes(xintercept = lower_bound[row, column]) ,col="green", lwd = 1)+
+  geom_vline(aes(xintercept = upper_bound[row, column]) ,col="green", lwd = 1)+
+  scale_linetype_manual( guide = guide_legend())+
+  xlab(TeX("$\\beta$"))+
+  ylab("Frequency") +
+  theme(text = element_text(size=14), legend.position = "none")
 
-theta_star_maxplayer <- apply(bootstrap_df_maxplayer, 2, function(z) var(z))
-theta_star_maxplayer <- apply(bootstrap_df_maxplayer, 2, function(z) var(z))
-theta_star_maxplayer <- apply(bootstrap_df_maxplayer, 2, function(z) var(z))
-theta_star_maxplayer <- apply(bootstrap_df_maxplayer, 2, function(z) var(z))
-theta_star_maxplayer <- apply(bootstrap_df_maxplayer, 2, function(z) var(z))
-theta_star_maxplayer <- apply(bootstrap_df_maxplayer, 2, function(z) var(z))
+}
 
-se_maxplayer = sd(theta_star_maxplayer)
-se_maxplayer = sd(theta_star_maxplayer)
-se_maxplayer = sd(theta_star_maxplayer)
-se_maxplayer = sd(theta_star_maxplayer)
-se_maxplayer = sd(theta_star_maxplayer)
-se_maxplayer = sd(theta_star_maxplayer)
-
-qplot( theta_star_maxplayer, col=I(4), fill=I("white"),bins=25)+
-  xlab(TeX("$\\hat{\\theta}^*$")) + 
-  ylab("Frequency") + 
-  ggtitle("IQR Bootstrap distribution")
+ grid.arrange(plot_boot_sample_ci(2,3),plot_boot_sample_ci(1,1))
 ```
-
-
 
 
 
@@ -131,16 +167,188 @@ qplot( theta_star_maxplayer, col=I(4), fill=I("white"),bins=25)+
 
 ## Point d)
 
+```{r}
+#We know that these two values are equal
+sum(eigen(sample_cov)$values) & sum(diag(sample_cov))
+
+j_star=6
+theta_j_star=sum(eigen(sample_cov)$values[1:j_star])/sum(eigen(sample_cov)$values)
+
+theta=numeric(ncol(df))
+for( i in 1:length(theta)){
+  theta[i]=sum(eigen(sample_cov)$values[1:i]/sum(eigen(sample_cov)$values))
+}
+
+plot(ecdf(theta))
+```
+
+
 ## Point e)
+
+```{r}
+sample(theta, replace=TRUE)
+boot_eigen = function(){
+  
+}
+```
+
+
+
 
 ## Point f)
 
+Make things more feasible
+```{r}
+set.seed(abs(636-555-3226))
+ind <- sample(1:nrow(df),5000,FALSE)
+sub_data <- df[ind,]
+```
+
+```{r}
+lm_game=lm(data=sub_data, average_rating ~ .)
+
+res_sub_data=matrix(NA, 1, ncol(sub_data)+2)
+res_sub_data[1,]=c(lm_game$coefficients, summary(lm_game)$r.squared,
+               max((lm_game$coef["playingtime"]-lm_game$coef["minage"])/(lm_game$coef["minplayers"]+lm_game$coef["yearpublished"]),0 ))
+
+colnames(res_sub_data)=c(colnames(sub_data), "R2" , "theta_hat")
+res_sub_data[,"yearpublished"]-1
+```
+
+COMMENT
+
+
 ## Point g)
+```{r}
+plot(lm_game)
+```
+We can notice some features from this plots, useful for the choice of which bootstrap would be a sensitive choice. First of all the assumption of constant variance is not realistic in this case. Also the assumption of the errors distributed as a normal has problems, since we have a long tailed distribution. From this quick analysis of the model we can choose the bootstrap method more suited and explain why the others are not.
+1. shuffle the errors -> this method relies on assumption that the chosen model fits the data well and the residuals have constant variance
+2. Parametric bootstrap for logistic regression ->we are assuming that we know the distribution of the population which we don't
+3. Resample the line of the two datasets -> this approach violates the assumption of constant (fixed) design matrix. 
+however this applies perfectly to our case
+
+```{r}
+boot_reg_game <- function(data, B=200){
+  
+  n0 <- nrow(data)
+  
+  res <- replicate(B,{
+    ind   <- sample(1:n0, n0, TRUE)
+    Dstar <- data[ind,]
+    Mstar <- lm(data=Dstar, average_rating ~ .)
+    
+    c(Mstar$coef, summary(Mstar)$r.squared, max((Mstar$coef["playingtime"]-Mstar$coef["minage"])/(Mstar$coef["minplayers"]+Mstar$coef["yearpublished"]),0 ))
+  })
+  
+  t(res)
+}
+
+res_game_boot=boot_reg_game(data=sub_data)
+colnames(res_game_boot)=c(colnames(sub_data), "R2" , "theta_hat")
+```
+Compute the estimates
+```{r}
+melted <- reshape2::melt(res_game_boot)
+melted <- melted %>% group_by(Var2) %>% mutate( boot_sd = sd(value),
+                                         boot_lowerbound = quantile(value, .025), boot_upperbound = quantile(value, .975),
+                                         boot_mean = mean(value), bias=boot_mean-res_sub_data[,as.character(Var2)]) %>% ungroup()
+```
+
+
+
+Plot the results
+```{r}
+
+
+ggplot( melted )+
+  geom_point(aes(x=Var1,y=value),alpha=.4,col=4)+
+  geom_hline(aes(yintercept = boot_upperbound) ,col=2, lwd = 1)+
+  geom_hline(aes(yintercept = boot_lowerbound) ,col=2, lwd = 1)+
+  geom_hline(aes(yintercept = boot_mean) ,col=2, lwd = 1, lty=3)+
+  facet_wrap(~Var2,scales = "free")+
+  xlab("Bootstrap replication")+
+  ylab(TeX("$\\beta$, $R^2$ and \\theta")) +
+  theme(text = element_text(size=14), legend.position = "none")
+
+ggplot( melted )+
+  geom_histogram(aes(x=value),alpha=.4,col=4,fill="white",bins=25)+
+  geom_vline(aes(xintercept = boot_upperbound) ,col=2, lwd = 1)+
+  geom_vline(aes(xintercept = boot_lowerbound) ,col=2, lwd = 1)+
+  geom_vline(aes(xintercept = boot_mean) ,col=2, lwd = 1, lty=3)+
+  facet_wrap(~Var2,scales = "free")+
+  xlab(TeX("$\\beta$ and AIC"))+
+  ylab(TeX("$\\beta$, $R^2$ and \\theta")) +
+  theme(text = element_text(size=14), legend.position = "none")
+
+
+
+```
+
+
 
 ## Point h)
+Jackknife approach
+```{r}
+
+jack_reg_game = function(data, B){
+  
+  n0 <- nrow(data)
+  
+  res=matrix(NA, n0, ncol(data)+2)
+for(i in 1:n0){
+  Mjack=lm(data=data[-i,], average_rating ~ .)
+  res[i,]=c(Mjack$coef, summary(Mjack)$r.squared, max((Mjack$coef["playingtime"]-Mjack$coef["minage"])/(Mjack$coef["minplayers"]+Mjack$coef["yearpublished"]),0 ))
+}
+  
+  
+  
+  return(res)
+}
+
+res_game_jack=jack_reg_game(sub_data, 10)
+colnames(res_game_jack)=c(colnames(sub_data), "R2" , "theta_hat")
+```
+Compute the jackknife estimate, bias-corrected estimate and standard error
+
+```{r}
+melted <- reshape2::melt(res_game_jack)
+melted <- melted %>% group_by(Var2) %>% mutate( boot_sd = sd(value),
+                                         boot_lowerbound = quantile(value, .025), boot_upperbound = quantile(value, .975),
+                                         boot_mean = mean(value), bias=boot_mean-res_sub_data[,as.character(Var2)]) %>% ungroup()
+```
+
+
+Plot the results
+```{r}
+
+ggplot( melted )+
+  geom_point(aes(x=Var1,y=value),alpha=.4,col=4)+
+  geom_hline(aes(yintercept = boot_upperbound) ,col=2, lwd = 1)+
+  geom_hline(aes(yintercept = boot_lowerbound) ,col=2, lwd = 1)+
+  geom_hline(aes(yintercept = boot_mean) ,col=2, lwd = 1, lty=3)+
+  facet_wrap(~Var2,scales = "free")+
+  xlab("Bootstrap replication")+
+  ylab(TeX("$\\beta$, $R^2$ and \\theta")) +
+  theme(text = element_text(size=14), legend.position = "none")
+
+ggplot( melted )+
+  geom_histogram(aes(x=value),alpha=.4,col=4,fill="white",bins=25)+
+  geom_vline(aes(xintercept = boot_upperbound) ,col=2, lwd = 1)+
+  geom_vline(aes(xintercept = boot_lowerbound) ,col=2, lwd = 1)+
+  geom_vline(aes(xintercept = boot_mean) ,col=2, lwd = 1, lty=3)+
+  facet_wrap(~Var2,scales = "free")+
+  xlab(TeX("$\\beta$ and AIC"))+
+  ylab(TeX("$\\beta$, $R^2$ and \\theta")) +
+  theme(text = element_text(size=14), legend.position = "none")
+
+
+```
+
 
 
 # Exercise 2 - We need some music!
+
 
 
 ## Point a)
