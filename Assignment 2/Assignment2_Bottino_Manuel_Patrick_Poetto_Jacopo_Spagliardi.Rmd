@@ -45,6 +45,12 @@ library(knitr)
 library(latex2exp)
 library(GGally)
 library(combinat)
+library(superheat)
+library(stringr)
+library(purrr)
+library(tidyr)
+library(lubridate)
+library(kableExtra)
 ```
 
 
@@ -84,8 +90,7 @@ Since we have scaled all the columns with variance equal to 1, it implies that t
 
 ## Point c)
 ```{r}
-
-B=1000
+B=10
 
 cov_var_sample=array(NA, dim=c(ncol(df),ncol(df),B))
 
@@ -349,9 +354,198 @@ ggplot( melted )+
 
 # Exercise 2 - We need some music!
 
+```{r echo=FALSE}
+df2 = readRDS("~/Documents/GitHub/Computational-stat/Assignment 2/spot.RDS")
+```
 
 
 ## Point a)
+The dataset we're working with is a nested from a bigger version comprehending 2072 observations for 18 variables providing data of a Spotify tracks sample. Data are provided by the Spotify for Developers API (source: https://developer.spotify.com/documentation/web-api/reference/get-audio-features). 
+
+```{r echo=FALSE}
+df2 = subset(df2, select = c(acousticness, danceability, energy, instrumentalness, liveness, speechiness, valence, pop, loudness, duration_ms, tempo, n, explicit, first_auth, name, release_date, id)) # re ordering variables for better explanatory purposes
+
+subset1 <- subset(df2, select = c(acousticness, danceability, energy, instrumentalness, 
+                                  liveness, speechiness))
+subset2 <- subset(df2, select = c(valence, pop, loudness, duration_ms, tempo, n))
+
+kable(summary(subset1))
+kable(summary(subset2))
+```
+
+Note that factors and characters are excluded from the summary. 
+The first 8 variables are all synthetic float indexes from 0 to 1 describing one feature of the track, sometime based on musical features like path, tempo, beat, stability, strenght, regularity, and sometime based on elements which may come out during the analysis (background noise for liveness, sound for acousticness). These ones measure for example danceability or energy as well as liveness or acousticness. Then there are three numerical variables which are measures of duration, loudness and the tempo of the song and a factor which tells if the track is explicit (0) or not (1). Four qualitative variables then tell us the original author, the artist who actually published the track, and an ID of the track itself. Variable n is eventually the numer of songs by the same artist in this dataset. 
+
+```{r echo=FALSE, fig.height=4, fig.width=7}
+# Select synthetic index variables and create dataframe
+columns = c("acousticness", "danceability", "energy", "instrumentalness", "liveness", "speechiness", "valence", "pop")
+indexes = df2[, columns]
+# Colors
+colors <- c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7", "#999999")
+
+# Boxplots
+boxplots <- stack(indexes)
+ggplot(boxplots, aes(x = ind, y = values)) +
+  geom_boxplot(fill = colors) +
+  labs(x = "Variable", y = "Value") +
+  ggtitle("Boxplots of synthetic indexes") +
+  theme_minimal()
+```
+
+From these boxplots we can have an idea of the distributions of each feature among the tracks. For example we can say that most songs are likely to be non live, acoustic or spoken. Danceability, energy and popularity are distributed a little above 0.5 and the first two present a fatter left tail and viceversa for the third. The variable valence seems to be the most symmetric around the middle value, with equally weighted tails. 
+
+```{r echo=FALSE, fig.height=4.2, fig.width=8}
+# Correlation Matrix dataframe
+columns2 <- c("acousticness", "danceability", "energy", "instrumentalness", "liveness", "speechiness", "valence", "pop", "loudness", "duration_ms", "tempo")
+data = df2[, columns2]
+cor_matrix = cor(data)
+cor_df <- melt(cor_matrix)
+
+# Shortening variable names and re ordering variables 
+cor_df$Var2 <- str_wrap(cor_df$Var2, width = 10)
+cor_df$Var1 <- factor(cor_df$Var1, levels = columns2)
+cor_df$Var2 <- factor(cor_df$Var2, levels = rev(columns2))
+
+# Heatmap
+ggplot(data = cor_df, aes(x = Var2, y = Var1, fill = value)) +
+  geom_tile() +
+  geom_text(aes(label = round(value, 2)), color = "white", size = 3) +
+  scale_fill_gradientn(colors = c("#440154FF", "#3B528BFF", "#21908CFF", "#5DC863FF", "#FDE725FF")) +
+  theme_minimal() +
+  labs(title = "Correlation Matrix",
+       x = "",
+       y = "",
+       fill = "Correlation") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  coord_cartesian(clip = "off", expand = FALSE) +
+  theme(axis.title.y = element_text(margin = margin(r = 10))) +
+  theme(axis.text.y = element_text(margin = margin(r = 10))) +
+  theme(axis.title.x = element_text(margin = margin(t = 10))) +
+  theme(axis.text.x = element_text(margin = margin(t = 10))) +
+  theme(panel.border = element_blank())
+```
+
+The correlation matrix plotted on a heatmap shows that most variables are almost uncorrelated with each other. The variable loudness is strongly positive related with energy and negative related with acousticness, which perfectly makes sense as well as the fact that energy and acousticness are negative related. Another reasonable result is that valence (negativity or positivity of the song) has some correlation with danceability and energy.
+
+```{r echo=FALSE}
+# Histograms
+par(mfrow = c(2, 3))
+hist(df2$loudness, col = "#56B4E9", main = "Loudness", xlab="Loudness")
+hist(df2$duration_ms, col = "#F0E442", main = "Duration (ms)", xlab="Duration")
+hist(df2$tempo, col = "#D55E00", main = "Tempo", xlab="Tempo")
+barplot(table(df2$n), col = "#CC79A7", main = "n")
+barplot(table(df2$explicit), col = "#FF6F91", main = "Explicit")
+barplot(table(df2$release_date), col = "#999999", main = "Release Date")
+```
+
+The histograms show the distribution for numerical variables.
+
+```{r echo=FALSE, fig.height=2.4, fig.width=8}
+# Top 3 authors
+top_authors <- df2 %>%
+  group_by(first_auth) %>%
+  summarise(n = n()) %>%
+  top_n(3, n) %>%
+  arrange(desc(n))
+
+# Dataset filtering
+filtered_data <- df2 %>%
+  filter(first_auth %in% top_authors$first_auth)
+
+# Variables list splitted
+group1 <- c("acousticness", "danceability", "energy", "instrumentalness")
+group2 <- c("liveness", "speechiness", "valence", "pop")
+
+# Mean of each variable for each author
+mean_values_group1 <- filtered_data %>%
+  group_by(first_auth) %>%
+  summarise(acousticness = mean(acousticness),
+            danceability = mean(danceability),
+            energy = mean(energy),
+            instrumentalness = mean(instrumentalness)) %>%
+  pivot_longer(cols = -first_auth, names_to = "Variable", values_to = "MeanValue")
+
+mean_values_group2 <- filtered_data %>%
+  group_by(first_auth) %>%
+  summarise(liveness = mean(liveness),
+            speechiness = mean(speechiness),
+            valence = mean(valence),
+            pop = mean(pop)) %>%
+  pivot_longer(cols = -first_auth, names_to = "Variable", values_to = "MeanValue")
+
+# Histograms
+plot_group1 <- ggplot(data = mean_values_group1, aes(x = first_auth, y = MeanValue, fill = Variable)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Mean value by author",
+       x = "Author",
+       y = "Mean value") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  theme_minimal() +
+  scale_fill_manual(values = alpha(RColorBrewer::brewer.pal(n = 8, name = "Set2"), 0.7))
+
+
+plot_group2 <- ggplot(data = mean_values_group2, aes(x = first_auth, y = MeanValue, fill = Variable)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Mean values by author",
+       x = "Author",
+       y = "Mean value") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  theme_minimal() +
+  scale_fill_manual(values = alpha(RColorBrewer::brewer.pal(n = 8, name = "Set2"), 0.7))
+
+
+# Visualizza i grafici
+par(mfrow = c(2, 1))
+plot_group1
+plot_group2
+
+```
+
+Histograms above show the mean value of our indexes for the top three artists (based on number of songs in the data) to have a qualitative idea of at least the three authors that contributed the most to the data. 
+
+```{r echo=FALSE, fig.height=3, fig.width=8, warning=FALSE}
+# Compute frequencies for first_auth and reorder authors 
+first_auth_freq <- df2 %>%
+  count(first_auth) %>%
+  arrange(desc(n)) %>%
+  mutate(first_auth = reorder(first_auth, desc(n)))
+
+# first_author histogram
+bar_plot_first_auth <- ggplot(first_auth_freq, aes(x = first_auth, y = n, fill = "Author")) +
+  geom_bar(stat = "identity") +
+  labs(title = "First Author frequency",
+       x = "Author",
+       y = "Frequency",
+       fill = "Author frequency") +
+  scale_fill_manual(values = alpha("green", 0.5), guide="legend") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Exract the year of release_date
+df2$anno_release <- year(ymd(df2$release_date))
+
+# Compute frequencies for year of release
+release_date_freq <- df2 %>%
+  count(anno_release) %>%
+  arrange(desc(n))
+
+# Histogram for year of release
+bar_plot_release_date <- ggplot(release_date_freq, aes(x = as.character(anno_release), y = n, fill = "Release year")) +
+  geom_bar(stat = "identity") +
+  labs(title = "Release year distribution",
+       x = "Release year",
+       y = "Frequency",
+       fill = "Release year") +
+  scale_fill_manual(values = alpha("red", 0.5), guide = "legend") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  coord_cartesian(ylim = c(40, max(release_date_freq$n)))
+
+bar_plot_first_auth
+bar_plot_release_date
+```
+
+We plotted the frequencies of authors in the dataset and frequencies of release per year, to have an idea of how the two most relevant qualitative variables are distributed, aggregating tracks among their author and over the years of release. 
 
 ## Point b)
 
