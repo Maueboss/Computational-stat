@@ -68,9 +68,9 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 df <- readRDS("~/Documents/GitHub/Computational-stat/Assignment 2/games_preprocessed.RDS")
 
-plot(df$average_rating, df$yearpublished) # to see whether old board_games tend to be preferred more because of their assessed popularity
+plot(df$average_rating, df$yearpublished) # to see whether old board_games tend to be preferred more because of their                                                assessed popularity
 
-ggplot(data=df, aes(y=playingtime, x=as.factor(minplayers)))+ # As more player play are needed to start the game,                                                                 the average duration increases
+ggplot(data=df, aes(y=playingtime, x=as.factor(minplayers)))+ # As more player play are needed to start the game,                                                                        the average duration increases
   geom_boxplot(outlier.colour="black", outlier.shape=16,
              outlier.size=2, notch=FALSE)
 ```
@@ -90,7 +90,7 @@ Since we have scaled all the columns with variance equal to 1, it implies that t
 
 ## Point c)
 ```{r}
-B=10
+B=100
 
 cov_var_sample=array(NA, dim=c(ncol(df),ncol(df),B))
 
@@ -112,28 +112,29 @@ upper_bound=sample_cov+qnorm(c(0.975), mean=0, sd=1)*se_cov_var
 
 2. Use the quantile of the bootstrap sampling distribution, this method is considered more robust than the one before
 ```{r}
-boot_sample_variance <- data.frame(matrix(nrow = 6, ncol = 6))
-colnames(boot_sample_variance) <- c("maxplayers", "playingtime", "minage", "average_rating", "total_owners", "average_weight")
+boot_sample_variance <- data.frame(matrix(nrow = 8, ncol = 8))
+colnames(boot_sample_variance) <- c("yearpublished", "minplayers", "maxplayers", "playingtime", "minage", "average_rating", "total_owners", "average_weight")
 
-for(i in 1:6){
-  for(j in 1:6){
+for(i in 1:8){
+  for(j in 1:8){
     boot_sample_variance[i,j]=list(list(cov_var_sample[i,j,]))
   }
 }
-boot_sample_variance_ci <- data.frame(matrix(nrow = 6, ncol = 6))
-colnames(boot_sample_variance_ci) <- c("maxplayers", "playingtime", "minage", "average_rating", "total_owners", "average_weight")
+boot_sample_variance_ci <- data.frame(matrix(nrow = 8, ncol = 8))
+colnames(boot_sample_variance_ci) <- c("yearpublished", "minplayers", "maxplayers", "playingtime", "minage", "average_rating", "total_owners", "average_weight")
 
-for(i in 1:6){
-  for(j in 1:6){
+for(i in 1:8){
+  for(j in 1:8){
     boot_sample_variance_ci[i,j]=list(list(quantile(boot_sample_variance[i,j][[1]], probs=c(0.025,0.975))))
   }
 }
+
 ```
 
 3. Using as assumption the fact that the behavior of the bias $\theta - \hat \theta$ is the same as $\hat \theta - \hat \theta^*$, we can compute the confidence interval of the bias-corrected estimate
 ```{r}
 boot_sample_variance_ci_bias <- data.frame(matrix(nrow = 6, ncol = 6))
-colnames(boot_sample_variance_ci) <- c("maxplayers", "playingtime", "minage", "average_rating", "total_owners", "average_weight")
+colnames(boot_sample_variance_ci) <-  c("yearpublished", "minplayers", "maxplayers", "playingtime", "minage", "average_rating", "total_owners", "average_weight")
 
 for(i in 1:6){
   for(j in 1:6){
@@ -163,7 +164,7 @@ plot_boot_sample_ci = function(row, column){
 
 }
 
- grid.arrange(plot_boot_sample_ci(2,3),plot_boot_sample_ci(1,1))
+grid.arrange(plot_boot_sample_ci(2,3),plot_boot_sample_ci(1,1))
 ```
 
 
