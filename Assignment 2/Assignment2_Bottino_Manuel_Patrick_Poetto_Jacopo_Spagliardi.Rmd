@@ -568,9 +568,80 @@ bar_plot_release_date
 
 We plotted the frequencies of authors in the dataset and frequencies of release per year, to have an idea of how the two most relevant qualitative variables are distributed, aggregating tracks among their author and over the years of release. 
 
-## Point b)
+## Point b
+
+```{r}
+
+# Function definition
+pop_est = function(data, auth_X, auth_Y) {
+Xauth_pop = data %>%
+filter(first_auth == auth_X) %>%
+summarise(med_log = median(logit(pop)))
+Yauth_pop = data %>%
+filter(first_auth == auth_Y) %>%
+summarise(med_log = median(logit(pop)))
+pop_diff = abs(Xauth_pop$med_log - Yauth_pop$med_log)
+return(pop_diff)
+}
+# Apply the function
+diff <- pop_est(df2, "AC/DC", "Kanye West")
+print(diff)
+```
+
+```{r}
+# Lista degli autori unici nel dataset
+autori <- unique(df2$first_auth)
+
+# Creazione della matrice delle comparazioni
+matrice_comparazioni <- matrix(NA, nrow = length(autori), ncol = length(autori), dimnames = list(autori, autori))
+
+# Loop per calcolare le comparazioni
+for (i in 1:length(autori)) {
+  for (j in 1:length(autori)) {
+    if (i != j) {
+      diff <- pop_est(df2, autori[i], autori[j])
+      matrice_comparazioni[i, j] <- diff
+    }
+  }
+}
+```
+
+
+```{r}
+heatmap <- ggplot(data = melt(matrice_comparazioni)) +
+geom_tile(aes(x = Var2, y = Var1, fill = value), color = "white") +
+scale_fill_gradient(low = "blue", high = "red") +
+theme(axis.text.x = element_text(angle=90, hjust = 1, size=5)) +
+theme(axis.text.y = element_text(hjust = 1, size=5))
+heatmap
+```
 
 ## Point c)
+
+The formal testing hypothesis system would be the following:
+
+1) Null Hypothesis (H0): There is no difference in popularity between two artists, X and Y. In other words, the median log-odds of popularity for X is equal to the median log-odds of popularity for Y.
+
+$H_0: \left| \text{median}\left(\frac{\log(X)}{\log(1-X)}\right) = \text{median}\left(\frac{\log(Y)}{\log(1-Y)}\right) \right|$
+
+2) Alternative Hypothesis (HA): There is a difference in popularity between two artists, X and Y. In other words, the median log-odds of popularity for X is not equal to the median log-odds of popularity for Y.
+$H_0: \left| \text{median}\left(\frac{\log(X)}{\log(1-X)}\right) \neq \text{median}\left(\frac{\log(Y)}{\log(1-Y)}\right) \right|$ 
+
+```{r}
+obs_val = matrice_comparazioni
+B = 500
+perm_stat = numeric(B)
+
+perms_subs = replicate(B, sample(1:100,replace = F))
+  
+  
+perm_stat = apply(perms_subs,1, function(x) { perm_outcome = D$inc[x]
+                           t.test(x = perm_outcome[D$lab == "US"],
+                         y = perm_outcome[D$lab == "EU"])$stat})
+
+hist(perm_stat,breaks = 20)
+abline(v= obs_t$statistic)
+```
 
 ## Point d)
 
