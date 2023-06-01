@@ -65,15 +65,21 @@ knitr::opts_chunk$set(echo = TRUE)
 
 
 ## Point a)
-```{r}
+```{r echo=FALSE, warning=FALSE}
 df <- readRDS("~/Documents/GitHub/Computational-stat/Assignment 2/games_preprocessed.RDS")
 
-plot(df$average_rating, df$yearpublished) # to see whether old board_games tend to be preferred more because of their                                                assessed popularity
+plot(df$average_rating, df$yearpublished, pch=".", col="blue") # to see whether old board_games tend to be preferred more because of their                                                assessed popularity
 
 ggplot(data=df, aes(y=playingtime, x=as.factor(minplayers)))+ # As more player play are needed to start the game,                                                                        the average duration increases
-  geom_boxplot(outlier.colour="black", outlier.shape=16,
-             outlier.size=2, notch=FALSE)
+  geom_boxplot(outlier.colour="blue", outlier.shape=16,
+             outlier.size=2, notch=FALSE, fill="lightblue")
+
+ggpairs(df[,3:10], progress= FALSE, pch="")# We plot only quantitative variables, which in this case are the columns after the third
 ```
+Some comment:
+- There is not much correlation between the variables, we can have high confidence on this (they are all significant)
+
+
 ## Point b)
 ```{r}
 df= df[,-1:-2]
@@ -82,9 +88,9 @@ df=data.frame(scale(df))
 
 ```{r}
 sample_cov=cov(df)
-cor(df)
+a = cor(df)
 # We can get the same result using cov2cor
-cov2cor(sample_cov)
+kable(cov2cor(sample_cov))
 ```
 Since we have scaled all the columns with variance equal to 1, it implies that the covariance-variance matrix is equal to the correlation matrix. Fonte: https://math.stackexchange.com/questions/3780344/under-what-conditions-will-the-covariance-matrix-be-identical-to-the-correlation
 
@@ -113,7 +119,9 @@ upper_bound=sample_cov+qnorm(c(0.975), mean=0, sd=1)*se_cov_var
 2. Use the quantile of the bootstrap sampling distribution, this method is considered more robust than the one before
 ```{r}
 boot_sample_variance <- data.frame(matrix(nrow = 8, ncol = 8))
-colnames(boot_sample_variance) <- c("yearpublished", "minplayers", "maxplayers", "playingtime", "minage", "average_rating", "total_owners", "average_weight")
+colnames(boot_sample_variance) <- c("yearpublished", "minplayers", "maxplayers", 
+                                    "playingtime", "minage", "average_rating", "total_owners",    
+                                    "average_weight")
 
 for(i in 1:8){
   for(j in 1:8){
@@ -121,7 +129,8 @@ for(i in 1:8){
   }
 }
 boot_sample_variance_ci <- data.frame(matrix(nrow = 8, ncol = 8))
-colnames(boot_sample_variance_ci) <- c("yearpublished", "minplayers", "maxplayers", "playingtime", "minage", "average_rating", "total_owners", "average_weight")
+colnames(boot_sample_variance_ci) <- c("yearpublished", "minplayers", "maxplayers", 
+                                       "playingtime", "minage", "average_rating", "total_owners", "average_weight")
 
 for(i in 1:8){
   for(j in 1:8){
@@ -192,12 +201,26 @@ plot(ecdf(theta))
 ## Point e)
 
 ```{r}
-sample(theta, replace=TRUE)
-boot_eigen = function(){
-  
-}
+B=1000
+sort(sample(theta, replace=TRUE))
+sample_theta=replicate(B, sample(theta, replace=TRUE))
+sample_theta=apply(sample_theta,2, sort)
+theta_hat_boot=apply(sample_theta, 1 , mean)
+se_hat_boot=apply(sample_theta, 1 , sd)
+
+bias=theta-theta_hat_boot
+
+t = data.frame(which(sample_theta>0.76, arr.ind=TRUE)) %>% # Computing the first column when we reach 
+                                                           # the condition
+  group_by(col) %>%
+  filter(row_number()==1)
+
+
 ```
 
+```{r}
+cat("Bootstrap estimate:", theta_hat_boot[6], "\n Bootstrap standard error:",  se_hat_boot[6] )
+```
 
 
 
@@ -226,12 +249,13 @@ COMMENT
 
 ## Point g)
 ```{r}
-plot(lm_game)
+plot(lm_game, col="blue", pch=".")
 ```
+
 We can notice some features from this plots, useful for the choice of which bootstrap would be a sensitive choice. First of all the assumption of constant variance is not realistic in this case. Also the assumption of the errors distributed as a normal has problems, since we have a long tailed distribution. From this quick analysis of the model we can choose the bootstrap method more suited and explain why the others are not.
-1. shuffle the errors -> this method relies on assumption that the chosen model fits the data well and the residuals have constant variance
-2. Parametric bootstrap for logistic regression ->we are assuming that we know the distribution of the population which we don't
-3. Resample the line of the two datasets -> this approach violates the assumption of constant (fixed) design matrix. 
+1. shuffle the errors \rightarrow this method relies on assumption that the chosen model fits the data well and the residuals have constant variance
+2. Parametric bootstrap for logistic regression\rightarrow we are assuming that we know the distribution of the population which we don't
+3. Resample the line of the two datasets\rightarrow this approach violates the assumption of constant (fixed) design matrix. 
 however this applies perfectly to our case
 
 ```{r}
@@ -275,7 +299,8 @@ ggplot( melted )+
   facet_wrap(~Var2,scales = "free")+
   xlab("Bootstrap replication")+
   ylab(TeX("$\\beta$, $R^2$ and \\theta")) +
-  theme(text = element_text(size=14), legend.position = "none")
+  theme(text = element_text(size=14), legend.position = "none")+
+  scale_fill_manual(values="lightblue")
 
 ggplot( melted )+
   geom_histogram(aes(x=value),alpha=.4,col=4,fill="white",bins=25)+
@@ -286,9 +311,6 @@ ggplot( melted )+
   xlab(TeX("$\\beta$ and AIC"))+
   ylab(TeX("$\\beta$, $R^2$ and \\theta")) +
   theme(text = element_text(size=14), legend.position = "none")
-
-
-
 ```
 
 
@@ -306,8 +328,6 @@ for(i in 1:n0){
   Mjack=lm(data=data[-i,], average_rating ~ .)
   res[i,]=c(Mjack$coef, summary(Mjack)$r.squared, max((Mjack$coef["playingtime"]-Mjack$coef["minage"])/(Mjack$coef["minplayers"]+Mjack$coef["yearpublished"]),0 ))
 }
-  
-  
   
   return(res)
 }
