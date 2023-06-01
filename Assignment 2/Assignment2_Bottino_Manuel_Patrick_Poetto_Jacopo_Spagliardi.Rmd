@@ -645,10 +645,48 @@ abline(v= obs_t$statistic)
 
 ## Point d)
 
+
+
+
+
 ## Point e)
+
+
+```{r}
+df_t_test= df2 %>%
+  mutate( pop = scale(pop)) 
+artists=unique(df_t_test$first_auth)
+
+t_art=c()
+for(i in artists){
+  t_art=c(t_art, t.test(df_t_test$pop[df_t_test$first_auth == i], mu=0, alternative="greater")$p.value)
+}
+alpha=0.1
+t_art[which(t_art<alpha)]
+
+# Probability of the global null to be violeted
+(1-alpha)^40
+```
+
 
 ## Point f)
 
+```{r}
+
+function(method, df){
+  p=p.adjust(df, method= method)
+  
+}
+
+t_art_bonf=p.adjust(t_art, method= "bonferroni")
+t_art_holm=p.adjust(t_art, method= "holm")
+t_art_bh=p.adjust(t_art, method= "BH")
+```
+Difference between the 3 approaches:
+- Bonferroni \rightarrow we are controlling for the number of false discoveries, in particular the probability of getting even one false discovery is less than half
+- Holm \rightarrow similar to the Bonferroni but with more power
+- Benjamini-Hockberg \rightarrow the parameter which is controlled is the false discovery rate, but since we do not know V, we can take the estimate and set it less than or equal to alpha
+ 
 ## Point g)
 
 
