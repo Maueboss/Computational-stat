@@ -253,9 +253,9 @@ plot(lm_game, col="blue", pch=".")
 ```
 
 We can notice some features from this plots, useful for the choice of which bootstrap would be a sensitive choice. First of all the assumption of constant variance is not realistic in this case. Also the assumption of the errors distributed as a normal has problems, since we have a long tailed distribution. From this quick analysis of the model we can choose the bootstrap method more suited and explain why the others are not.
-1. shuffle the errors \rightarrow this method relies on assumption that the chosen model fits the data well and the residuals have constant variance
-2. Parametric bootstrap for logistic regression\rightarrow we are assuming that we know the distribution of the population which we don't
-3. Resample the line of the two datasets\rightarrow this approach violates the assumption of constant (fixed) design matrix. 
+1. shuffle the errors $\rightarrow$ this method relies on assumption that the chosen model fits the data well and the residuals have constant variance
+2. Parametric bootstrap for logistic regression $\rightarrow$ we are assuming that we know the distribution of the population which we don't
+3. Resample the line of the two datasets $\rightarrow$ this approach violates the assumption of constant (fixed) design matrix. 
 however this applies perfectly to our case
 
 ```{r}
@@ -593,7 +593,7 @@ print(diff)
 auth <- unique(df2$first_auth)
 
 # Creazione della matrice delle comparazioni
-comp <- matrix(NA, nrow = length(auth), ncol = length(autori), dimnames = list(auth, auth))
+comp <- matrix(NA, nrow = length(auth), ncol = length(auth), dimnames = list(auth, auth))
 
 # Loop per calcolare le comparazioni
 for (i in 1:length(auth)) {
@@ -625,6 +625,7 @@ The formal testing hypothesis system would be the following:
 $H_0: \left| \text{median}\left(\frac{\log(X)}{\log(1-X)}\right) = \text{median}\left(\frac{\log(Y)}{\log(1-Y)}\right) \right|$
 
 2) Alternative Hypothesis (HA): There is a difference in popularity between two artists, X and Y. In other words, the median log-odds of popularity for X is not equal to the median log-odds of popularity for Y.
+
 $H_0: \left| \text{median}\left(\frac{\log(X)}{\log(1-X)}\right) \neq \text{median}\left(\frac{\log(Y)}{\log(1-Y)}\right) \right|$ 
 
 ```{r}
@@ -743,9 +744,9 @@ t_art_holm=p.adjust(t_art, method= "holm")
 t_art_bh=p.adjust(t_art, method= "BH")
 ```
 Difference between the 3 approaches:
-- Bonferroni \rightarrow we are controlling for the number of false discoveries, in particular the probability of getting even one false discovery is less than half
-- Holm \rightarrow similar to the Bonferroni but with more power
-- Benjamini-Hockberg \rightarrow the parameter which is controlled is the false discovery rate, but since we do not know V, we can take the estimate and set it less than or equal to alpha
+- Bonferroni $\rightarrow$ we are controlling for the number of false discoveries, in particular the probability of getting even one false discovery is less than half
+- Holm $\rightarrow$ similar to the Bonferroni but with more power
+- Benjamini-Hockberg $\rightarrow$ the parameter which is controlled is the false discovery rate, but since we do not know V, we can take the estimate and set it less than or equal to alpha
  
 ## Point g)
 
