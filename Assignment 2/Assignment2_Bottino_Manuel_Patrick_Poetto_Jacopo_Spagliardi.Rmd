@@ -590,17 +590,17 @@ print(diff)
 
 ```{r}
 # Lista degli autori unici nel dataset
-autori <- unique(df2$first_auth)
+auth <- unique(df2$first_auth)
 
 # Creazione della matrice delle comparazioni
-matrice_comparazioni <- matrix(NA, nrow = length(autori), ncol = length(autori), dimnames = list(autori, autori))
+comp <- matrix(NA, nrow = length(auth), ncol = length(autori), dimnames = list(auth, auth))
 
 # Loop per calcolare le comparazioni
-for (i in 1:length(autori)) {
-  for (j in 1:length(autori)) {
+for (i in 1:length(auth)) {
+  for (j in 1:length(auth)) {
     if (i != j) {
-      diff <- pop_est(df2, autori[i], autori[j])
-      matrice_comparazioni[i, j] <- diff
+      diff <- pop_est(df2, auth[i], auth[j])
+      comp[i, j] <- diff
     }
   }
 }
@@ -608,7 +608,7 @@ for (i in 1:length(autori)) {
 
 
 ```{r}
-heatmap <- ggplot(data = melt(matrice_comparazioni)) +
+heatmap <- ggplot(data = melt(comp)) +
 geom_tile(aes(x = Var2, y = Var1, fill = value), color = "white") +
 scale_fill_gradient(low = "blue", high = "red") +
 theme(axis.text.x = element_text(angle=90, hjust = 1, size=5)) +
@@ -628,26 +628,82 @@ $H_0: \left| \text{median}\left(\frac{\log(X)}{\log(1-X)}\right) = \text{median}
 $H_0: \left| \text{median}\left(\frac{\log(X)}{\log(1-X)}\right) \neq \text{median}\left(\frac{\log(Y)}{\log(1-Y)}\right) \right|$ 
 
 ```{r}
-obs_val = matrice_comparazioni
-B = 500
-perm_stat = numeric(B)
-
-perms_subs = replicate(B, sample(1:100,replace = F))
+# re defining pop_est
+pop_est <- function(df, auth_X, auth_Y, songs) {
+  # Authors selection
+  songs_X <- df$pop[df$first_auth == auth_X]
+  songs_Y <- df$pop[df$first_auth == auth_Y]
   
+  # Songs vector
+  if (!missing(songs)) {
+    songs_X <- songs[1:length(songs_X)]
+    songs_Y <- songs[(length(songs_X) + 1):(length(songs_X) + length(songs_Y))]
+  }
   
-perm_stat = apply(perms_subs,1, function(x) { perm_outcome = D$inc[x]
-                           t.test(x = perm_outcome[D$lab == "US"],
-                         y = perm_outcome[D$lab == "EU"])$stat})
+  # formulas
+  median_X <- median(logit(songs_X))
+  median_Y <- median(logit(songs_Y))
+  
+  # Statistic
+  return(abs(median_X - median_Y))
+}
 
-hist(perm_stat,breaks = 20)
-abline(v= obs_t$statistic)
+# Variables
+first_auth <- df2$first_auth
+pop <- df2$pop
+
+# Initialize matrix
+p_value_matrix <- matrix(NA, nrow = length(unique(first_auth)), ncol = length(unique(first_auth)))
+
+# P-values
+authors <- unique(first_auth)
+for (i in 1:(length(authors)-1)) {
+  for (j in (i+1):length(authors)) {
+    author1 <- authors[i]
+    author2 <- authors[j]
+    
+    # Tracks of authors 
+    songs_author1 <- pop[first_auth == author1]
+    songs_author2 <- pop[first_auth == author2]
+    
+    # Obs_stat
+    observed_statistic <- abs(pop_est(df2, author1, author2))
+    
+    # Permutations
+    num_permutations <- 1000
+    permutation_stats <- rep(NA, num_permutations)
+    
+    for (k in 1:num_permutations) {
+      permuted_songs <- sample(c(songs_author1, songs_author2))
+      
+      # Permutations of current stat
+      permutation_stats[k] <- abs(pop_est(df2, author1, author2, permuted_songs))
+    }
+    
+    # P-values
+    p_value <- sum(permutation_stats >= observed_statistic) / num_permutations
+    
+    # Update matrix
+    p_value_matrix[i, j] <- p_value
+    p_value_matrix[j, i] <- p_value
+  }
+}
+kable(p_value_matrix)
 ```
 
 ## Point d)
 
+```{r}
+boxplot(df2$pop ~ df2$first_auth, col = cutree(hclust(as.dist(1-p_value_matrix)), 5))
+```
 
+The code above is meant to plot boxplots to show the distribution of the pop variable for each level of the first_auth variable. "col" is an argument for painting the plots. The composed function inside this argument can be disentangled as follows: 
+First of all, complements to 1 are applied to the p-value matrix in order to switch the values into a divergency measure in terms of distance. This may be because it's divergency (distance) is used in hierarchical clustering. Then the function "as.dist" is applied to our new matrix of complements to transform it into a distance matrix. This function operates assuming a symmetric square matrix so that it takes the lower half and computes the distance between the rows of the input matrix. So in this case the function compute the distances and store them into a matrix where the $i, j$ component corresponds to the distance between row i and row j of the input matrix.  
+Proceeding the code analysis, the "hclust" function is applied to the result above. This function is used to perform agglomerative hierarchical clustering on a distance matrix. The hierarchical clustering algorithm constructs a hierarchy of clusters by iteratively merging rows or columns based on their similarity or dissimilarity. Hierarchical clustering produces a cluster tree, known as a dendrogram, which shows how the rows or columns were grouped during the clustering process. The dendrogram can be used to select a certain number of clusters or to identify the structure of groups based on the heights of the tree nodes.
+Finally The "cutree" function in R is used to partition the dendrogram generated by the "hclust" function into a specified number of groups, in our case, 5. It takes an object of class "hclust" representing the hierarchical cluster tree as input and returns a vector of labels indicating the membership of each observation to the generated groups.
+In our context, the cutree function is used to assign colors (as it is an argument to "col") to the groups obtained from hierarchical clustering based on the distance matrix. The hierarchical tree is thus divided into 5 distinct groups, and cutree returns a vector of labels assigning each observation a corresponding group membership label.
 
-
+Once the label vector is obtained from cutree, it's used to color the groups in the boxplot graph.
 
 ## Point e)
 
