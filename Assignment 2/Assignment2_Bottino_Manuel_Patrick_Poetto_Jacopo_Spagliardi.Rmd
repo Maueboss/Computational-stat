@@ -50,6 +50,7 @@ library(stringr)
 library(purrr)
 library(tidyr)
 library(lubridate)
+library(ggthemes)
 library(kableExtra)
 ```
 
@@ -61,23 +62,56 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Excercise 1 - Risiko! is back, with friends
 
+In the first exercise we deal with a dataset containing different information about board games. The variables are really intuitive, I will focus on the description of the main ones:
 
-
+- minplayers and maxplayers $\rightarrow$ the minimum and maximum allowed players for each game
+- average_rating $\rightarrow$ a numerical value between 0 and 10 that indicates the average user game for each game
+- average weight $\rightarrow$ the difficulty of the game in a broad sense
+- playing time $\rightarrow$ how much a game last in average
 
 ## Point a)
 ```{r echo=FALSE, warning=FALSE}
 df <- readRDS("~/Documents/GitHub/Computational-stat/Assignment 2/games_preprocessed.RDS")
 
-plot(df$average_rating, df$yearpublished, pch=".", col="blue") # to see whether old board_games tend to be preferred more because of their                                                assessed popularity
-
-ggplot(data=df, aes(y=playingtime, x=as.factor(minplayers)))+ # As more player play are needed to start the game,                                                                        the average duration increases
+ggplot(data=df, aes(y=playingtime, x=as.factor(minplayers)))+ # I wanted to look at some statistics of playing time,
+                                                              # for different values of minplayers. Is more player associated 
+                                                              # with more playing time
   geom_boxplot(outlier.colour="blue", outlier.shape=16,
              outlier.size=2, notch=FALSE, fill="lightblue")
 
-ggpairs(df[,3:10], progress= FALSE, pch="")# We plot only quantitative variables, which in this case are the columns after the third
+ggpairs(df[,3:10], progress= FALSE, pch="")# We plot only quantitative variables, 
+                                          # which in this case are the columns after the third
+
+
+
+
 ```
-Some comment:
-- There is not much correlation between the variables, we can have high confidence on this (they are all significant)
+There is not much correlation between the variables, we can have high confidence on this statement (they are all significant)
+
+
+It would also be interesting to see which are the best games for each level of difficulty (average_weight)
+
+```{r echo=FALSE, warning=FALSE}
+#create the dataset where average_weigth is not continuous anymore
+df_plot = df 
+df_plot$weight_bins= cut(df_plot$average_weight, breaks = c(0, 1, 2, 3, 4, 5), labels = c("0", "1", "2", "3", "4")) 
+
+
+df_plot %>%
+  group_by(weight_bins) %>%
+  #select the top ten for each difficulty level
+  top_n(10, average_rating) %>%
+  ungroup %>%
+  ggplot(aes(reorder(name, average_rating),average_rating, fill = weight_bins)) +
+  geom_col(show.legend = FALSE) +
+  labs(x = NULL, y = "tf-idf") +
+  facet_wrap(~weight_bins, ncol = 3, scales = "free") +
+  coord_flip() +
+  theme_minimal() +
+  theme(axis.text.y=element_text(size=rel(0.5)))+
+  scale_fill_ptol()
+```
+
 
 
 ## Point b)
@@ -86,7 +120,7 @@ df= df[,-1:-2]
 df=data.frame(scale(df))
 ```
 
-```{r}
+```{r fig.width=6}
 sample_cov=cov(df)
 a = cor(df)
 # We can get the same result using cov2cor
@@ -96,42 +130,51 @@ Since we have scaled all the columns with variance equal to 1, it implies that t
 
 ## Point c)
 ```{r}
+set.seed(123)
 B=100
 
 cov_var_sample=array(NA, dim=c(ncol(df),ncol(df),B))
 
+# fill in the array with cov-var matrix for each bootstrap sample
 for(i in 1:B){
   cov_var_sample[,,i]=cov(slice_sample(df,n=nrow(df), replace=TRUE))
 }
 
+# bootstrap mean and standard error for each entry of the cov-var matrix
 theta_hat_bar=apply(cov_var_sample, c(1, 2), mean)
 se_cov_var=apply(cov_var_sample, c(1, 2), sd)
 
 ```
 
 Confidence intervals
-1. A first method consist on using the fact that, as ths sample size n grows large $\frac{\hat \theta - \theta}{SE_B(\hat \theta)} \approx N(0,1)$
+
+1. A first method consist on using the central limit theorem, stated as $\frac{\hat \theta - \theta}{SE_B(\hat \theta)} \approx N(0,1)$
 ```{r}
 lower_bound=sample_cov+qnorm(c(0.025), mean=0, sd=1)*se_cov_var
 upper_bound=sample_cov+qnorm(c(0.975), mean=0, sd=1)*se_cov_var
 ```
 
-2. Use the quantile of the bootstrap sampling distribution, this method is considered more robust than the one before
+2. Use the quantile of the bootstrap sampling distribution, this method is considered more robust than the frist one
 ```{r}
 boot_sample_variance <- data.frame(matrix(nrow = 8, ncol = 8))
 colnames(boot_sample_variance) <- c("yearpublished", "minplayers", "maxplayers", 
                                     "playingtime", "minage", "average_rating", "total_owners",    
                                     "average_weight")
 
+# I create a dataframe (8x8) where each entry is the sample obtained during bootstrap resampling, by creating a list into a list
+# (could not find any other way for storing vectors inside a dataframe)
 for(i in 1:8){
   for(j in 1:8){
     boot_sample_variance[i,j]=list(list(cov_var_sample[i,j,]))
   }
 }
+
+
 boot_sample_variance_ci <- data.frame(matrix(nrow = 8, ncol = 8))
 colnames(boot_sample_variance_ci) <- c("yearpublished", "minplayers", "maxplayers", 
                                        "playingtime", "minage", "average_rating", "total_owners", "average_weight")
 
+# With this kind of format it is easy to compute the percentiles
 for(i in 1:8){
   for(j in 1:8){
     boot_sample_variance_ci[i,j]=list(list(quantile(boot_sample_variance[i,j][[1]], probs=c(0.025,0.975))))
@@ -145,6 +188,7 @@ for(i in 1:8){
 boot_sample_variance_ci_bias <- data.frame(matrix(nrow = 6, ncol = 6))
 colnames(boot_sample_variance_ci) <-  c("yearpublished", "minplayers", "maxplayers", "playingtime", "minage", "average_rating", "total_owners", "average_weight")
 
+# The reasoning is really similar to the one discussed above, this time we also use the covariance variance matrix of the sample
 for(i in 1:6){
   for(j in 1:6){
     boot_sample_variance_ci_bias[i,j]=list(list(2*sample_cov[i,j]-quantile(boot_sample_variance[i,j][[1]], probs=c(0.975,0.025))))
@@ -154,7 +198,7 @@ for(i in 1:6){
 ```
 
 
-```{r}
+```{r echo=FALSE}
 
 plot_boot_sample_ci = function(row, column){
   ggplot()+
@@ -167,13 +211,13 @@ plot_boot_sample_ci = function(row, column){
   geom_vline(aes(xintercept = lower_bound[row, column]) ,col="green", lwd = 1)+
   geom_vline(aes(xintercept = upper_bound[row, column]) ,col="green", lwd = 1)+
   scale_linetype_manual( guide = guide_legend())+
-  xlab(TeX("$\\beta$"))+
+  xlab(paste("Cov-var entry" ,row, "x", column))+
   ylab("Frequency") +
   theme(text = element_text(size=14), legend.position = "none")
 
 }
 
-grid.arrange(plot_boot_sample_ci(2,3),plot_boot_sample_ci(1,1))
+grid.arrange(plot_boot_sample_ci(1,1),plot_boot_sample_ci(2,3))
 ```
 
 
@@ -183,16 +227,18 @@ grid.arrange(plot_boot_sample_ci(2,3),plot_boot_sample_ci(1,1))
 ## Point d)
 
 ```{r}
-#We know that these two values are equal
+#We know that these two values are equal, in fact:
 sum(eigen(sample_cov)$values) & sum(diag(sample_cov))
 
-j_star=6
-theta_j_star=sum(eigen(sample_cov)$values[1:j_star])/sum(eigen(sample_cov)$values)
-
+# Create a vector with all the possible values of theta_j
 theta=numeric(ncol(df))
 for( i in 1:length(theta)){
   theta[i]=sum(eigen(sample_cov)$values[1:i]/sum(eigen(sample_cov)$values))
 }
+
+# Which index is j_star
+theta[which(theta>0.76)][1]
+j_star=6
 
 plot(ecdf(theta))
 ```
@@ -201,27 +247,38 @@ plot(ecdf(theta))
 ## Point e)
 
 ```{r}
+set.seed(123)
 B=1000
-sort(sample(theta, replace=TRUE))
+
+#bootstrap sampling 
 sample_theta=replicate(B, sample(theta, replace=TRUE))
 sample_theta=apply(sample_theta,2, sort)
+
+# bootstrap estimates and standard error
 theta_hat_boot=apply(sample_theta, 1 , mean)
 se_hat_boot=apply(sample_theta, 1 , sd)
-
 bias=theta-theta_hat_boot
+
+
+```
+
+
+```{r}
+# bootstrap estimate and standard error for j_star 
+cat("Bootstrap estimate:", theta_hat_boot[6], "\n Bootstrap standard error:",  se_hat_boot[6], "\n theta hat:", theta[6])
+```
+
+```{r}
+# Probability of j_star equal to 5
 
 t = data.frame(which(sample_theta>0.76, arr.ind=TRUE)) %>% # Computing the first column when we reach 
                                                            # the condition
   group_by(col) %>%
   filter(row_number()==1)
 
-
+P_j_star_five=sum(t$row==5)/nrow(t)
+P_j_star_five
 ```
-
-```{r}
-cat("Bootstrap estimate:", theta_hat_boot[6], "\n Bootstrap standard error:",  se_hat_boot[6] )
-```
-
 
 
 ## Point f)
@@ -234,29 +291,34 @@ sub_data <- df[ind,]
 ```
 
 ```{r}
-lm_game=lm(data=sub_data, average_rating ~ .)
+set.seed(123)
 
+lm_game=lm(data=sub_data, average_rating ~ .)
+summary(lm_game)
+```
+The estimated intercept is really low, 0.008 approximately, also it should be considered 0 because the p-value under the null hypothesis stated as $H_0:\beta_0=0$ against $H_1:\beta_0=0$ is around 0.5 (we reject the null hypothesis )
+
+```{r}
+# store the values obtained through the sample that will be computed afterwards using bootstrap
 res_sub_data=matrix(NA, 1, ncol(sub_data)+2)
 res_sub_data[1,]=c(lm_game$coefficients, summary(lm_game)$r.squared,
                max((lm_game$coef["playingtime"]-lm_game$coef["minage"])/(lm_game$coef["minplayers"]+lm_game$coef["yearpublished"]),0 ))
 
+
 colnames(res_sub_data)=c(colnames(sub_data), "R2" , "theta_hat")
-res_sub_data[,"yearpublished"]-1
 ```
 
-COMMENT
-
-
 ## Point g)
-```{r}
-plot(lm_game, col="blue", pch=".")
+```{r echo=FALSE}
+plot(lm_game, col="blue", pch=".", which=c(1,2))
 ```
 
 We can notice some features from this plots, useful for the choice of which bootstrap would be a sensitive choice. First of all the assumption of constant variance is not realistic in this case. Also the assumption of the errors distributed as a normal has problems, since we have a long tailed distribution. From this quick analysis of the model we can choose the bootstrap method more suited and explain why the others are not.
+
 1. shuffle the errors $\rightarrow$ this method relies on assumption that the chosen model fits the data well and the residuals have constant variance
-2. Parametric bootstrap for logistic regression $\rightarrow$ we are assuming that we know the distribution of the population which we don't
+2. Parametric bootstrap for logistic regression $\rightarrow$ we are assuming that we know the distribution of the population which we don'tin 
 3. Resample the line of the two datasets $\rightarrow$ this approach violates the assumption of constant (fixed) design matrix. 
-however this applies perfectly to our case
+However this applies perfectly to our case
 
 ```{r}
 boot_reg_game <- function(data, B=200){
@@ -264,6 +326,7 @@ boot_reg_game <- function(data, B=200){
   n0 <- nrow(data)
   
   res <- replicate(B,{
+    #resample the rows with replacement, create the dataset and fit the model B times
     ind   <- sample(1:n0, n0, TRUE)
     Dstar <- data[ind,]
     Mstar <- lm(data=Dstar, average_rating ~ .)
@@ -288,7 +351,7 @@ melted <- melted %>% group_by(Var2) %>% mutate( boot_sd = sd(value),
 
 
 Plot the results
-```{r}
+```{r echo=FALSE}
 
 
 ggplot( melted )+
@@ -325,6 +388,8 @@ jack_reg_game = function(data, B){
   
   res=matrix(NA, n0, ncol(data)+2)
 for(i in 1:n0){
+  
+  # Fit the model each time removing the i-th row from 1 to the last one
   Mjack=lm(data=data[-i,], average_rating ~ .)
   res[i,]=c(Mjack$coef, summary(Mjack)$r.squared, max((Mjack$coef["playingtime"]-Mjack$coef["minage"])/(Mjack$coef["minplayers"]+Mjack$coef["yearpublished"]),0 ))
 }
@@ -346,7 +411,7 @@ melted <- melted %>% group_by(Var2) %>% mutate( boot_sd = sd(value),
 
 
 Plot the results
-```{r}
+```{r echo=FALSE}
 
 ggplot( melted )+
   geom_point(aes(x=Var1,y=value),alpha=.4,col=4)+
@@ -413,7 +478,7 @@ ggplot(boxplots, aes(x = ind, y = values)) +
   theme_minimal()
 ```
 
-From these boxplots we can have an idea of the distributions of each feature among the tracks. For example we can say that most songs are likely to be non live, acoustic or spoken. Danceability, energy and popularity are distributed a little above 0.5 and the first two present a fatter left tail and viceversa for the third. The variable valence seems to be the most symmetric around the middle value, with equally weighted tails. 
+From these boxplots we can have an idea of the main statistics , col="blue", pch="."  of each feature among the tracks. For example we can say that most songs are likely to be non live, acoustic or spoken. Danceability, energy and popularity are distributed a little above 0.5 and the first two present a fatter left tail and viceversa for the third. The variable valence seems to be the most symmetric around the middle value, with equally weighted tails. 
 
 ```{r echo=FALSE, fig.height=4.2, fig.width=8}
 # Correlation Matrix dataframe
@@ -583,7 +648,7 @@ summarise(med_log = median(logit(pop)))
 pop_diff = abs(Xauth_pop$med_log - Yauth_pop$med_log)
 return(pop_diff)
 }
-# Apply the function
+# Apply the function to AC/DC and Kanye West
 diff <- pop_est(df2, "AC/DC", "Kanye West")
 print(diff)
 ```
@@ -607,7 +672,7 @@ for (i in 1:length(auth)) {
 ```
 
 
-```{r}
+```{r echo=FALSE}
 heatmap <- ggplot(data = melt(comp)) +
 geom_tile(aes(x = Var2, y = Var1, fill = value), color = "white") +
 scale_fill_gradient(low = "blue", high = "red") +
@@ -694,7 +759,7 @@ pval_mat = p_value_matrix
 
 ## Point d)
 
-```{r}
+```{r echo=FALSE}
 boxplot(df2$pop ~ df2$first_auth, col = cutree(hclust(as.dist(1-pval_mat)), 5))
 ```
 
@@ -718,15 +783,16 @@ df_t_test= df2 %>%
   mutate( pop = scale(pop)) 
 artists=unique(df_t_test$first_auth)
 
-t_art=c()
+t_art=numeric()
 for(i in artists){
   t_art=c(t_art, t.test(df_t_test$pop[df_t_test$first_auth == i], mu=0, alternative="greater")$p.value)
 }
+
 alpha=0.1
 t_art[which(t_art<alpha)]
 
-# Probability of the global null to be violeted
-(1-alpha)^40
+# Probability of the global null to be violated
+1-(1-alpha)^40
 ```
 
 
