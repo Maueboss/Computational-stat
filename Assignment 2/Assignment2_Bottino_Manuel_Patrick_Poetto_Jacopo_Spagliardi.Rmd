@@ -818,12 +818,10 @@ Difference between the 3 approaches:
 
 The Holm procedure is more powerful than the Bonferroni correction because it takes into account that some comparisons may be more informative than others. In the Holm procedure, the p-values obtained from the comparisons are ordered in ascending order, and the corresponding critical values are calculated based on the number of comparisons. This approach takes into account the hierarchy of the p-values and allows for greater statistical power compared to the Bonferroni correction. So the Holm method provides better protection against Type II error too, while Bonferroni correction only against Type I because we know that if we try to decrease the Type I error we will increase the Type II error. From a graphic point of view, it is clear in fact decease Type I error ($\alpha$) means that we are moving for example the corresponding mean on the right, and it increases the probability of Type II error ($1-\beta$ where $\beta$ is the power of the test). Now we will try to be more formal.
 
-\begin{figure}[h!]
-    \centering
-    \includegraphics[scale =0.5]{Screenshot 2023-06-01 163530.png}
-    \caption{Type I error vs Type II error}
-    \label{fig: n=2}
-\end{figure}
+```{r, echo=FALSE, out.width='50%',  fig.align='center'}
+knitr::include_graphics("Screenshot 2023-06-01 163530.png")
+```
+
 
 We are showing it assuming that Null and Alternative hypotheses  are normally distributed but it works in general because we used the concept of CDF and its properties. 
 We can see the value indicated in the figure as \textit{Any mean} (now we will call $\bar{x}$) increase its value when $\alpha$ decrease.
