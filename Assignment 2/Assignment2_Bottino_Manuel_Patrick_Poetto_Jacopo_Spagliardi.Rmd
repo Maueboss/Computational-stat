@@ -81,8 +81,6 @@ ggplot(data=df, aes(y=playingtime, x=as.factor(minplayers)))+ # I wanted to look
              outlier.size=2, notch=FALSE, fill="lightblue")
 
 ```
-There is not much correlation between the variables, we can have high confidence on this statement (they are all significant)
-
 
 It would also be interesting to see which are the best games for each level of difficulty (average_weight)
 
@@ -103,7 +101,7 @@ df_plot %>%
   facet_wrap(~weight_bins, ncol = 3, scales = "free") +
   coord_flip() +
   theme_minimal() +
-  theme(axis.text.y=element_text(size=rel(0.5)))+
+  theme(axis.text.y=element_text(size=rel(0.5)), axis.text.x = element_text(size = 6))+
   scale_fill_ptol()
 ```
 
@@ -226,7 +224,7 @@ plot_boot_sample_ci = function(row, column){
 
 }
 
-grid.arrange(plot_boot_sample_ci(1,1),plot_boot_sample_ci(2,3))
+grid.arrange(plot_boot_sample_ci(1,1),plot_boot_sample_ci(3,2))
 ```
 
 
@@ -307,7 +305,7 @@ set.seed(123)
 lm_game=lm(data=sub_data, average_rating ~ .)
 summary(lm_game)
 ```
-The estimated intercept is really low, 0.008 approximately, also it should be considered 0 because the p-value under the null hypothesis stated as $H_0:\beta_0=0$ against $H_1:\beta_0=0$ is around 0.5 (we reject the null hypothesis )
+The estimated intercept is really low, 0.008 approximately, also it should be considered 0 because the p-value under the null hypothesis stated as $H_0:\beta_0=0$ against $H_1:\beta_0=0$ is around 0.5 (we don't reject the null hypothesis at the confidence level of 0.05, the standard for R)
 
 ```{r}
 # store the values obtained through the sample that will be computed afterwards 
@@ -376,9 +374,8 @@ ggplot( melted )+
   geom_hline(aes(yintercept = boot_lowerbound) ,col=2, lwd = 1)+
   geom_hline(aes(yintercept = boot_mean) ,col=2, lwd = 1, lty=3)+
   facet_wrap(~Var2,scales = "free")+
-  xlab("Bootstrap replication")+
-  ylab(TeX("$\\beta$, $R^2$ and \\theta")) +
-  theme(text = element_text(size=14), legend.position = "none")+
+  xlab(TeX("$\\beta$, $R^2$ and \\theta")) +
+  theme(text = element_text(size=8), legend.position = "none")+
   scale_fill_manual(values="lightblue")
 
 ggplot( melted )+
@@ -387,9 +384,8 @@ ggplot( melted )+
   geom_vline(aes(xintercept = boot_lowerbound) ,col=2, lwd = 1)+
   geom_vline(aes(xintercept = boot_mean) ,col=2, lwd = 1, lty=3)+
   facet_wrap(~Var2,scales = "free")+
-  xlab(TeX("$\\beta$ and AIC"))+
-  ylab(TeX("$\\beta$, $R^2$ and \\theta")) +
-  theme(text = element_text(size=14), legend.position = "none")
+  xlab(TeX("$\\beta$, $R^2$ and \\theta")) +
+  theme(text = element_text(size=8), legend.position = "none")
 ```
 
 
@@ -399,7 +395,7 @@ Jackknife approach
 
 ```{r}
 
-jack_reg_game = function(data, B){
+jack_reg_game = function(data){
   
   n0 <- nrow(data)
   
@@ -416,14 +412,16 @@ for(i in 1:n0){
   return(res)
 }
 
-res_game_jack=jack_reg_game(sub_data, 10)
+res_game_jack=jack_reg_game(sub_data)
 colnames(res_game_jack)=c(colnames(sub_data), "R2" , "theta_hat")
 ```
 Compute the jackknife estimate, bias-corrected estimate and standard error
 
 ```{r}
+n0 <- nrow(sub_data)
+
 melted <- reshape2::melt(res_game_jack)
-melted <- melted %>% group_by(Var2) %>% mutate( boot_sd = sd(value),
+melted <- melted %>% group_by(Var2) %>% mutate( boot_sd = sqrt((n0-1)/n0*sum(value-mean(value))^2),
         boot_lowerbound = quantile(value, .025), boot_upperbound = quantile(value, .975),
         boot_mean = mean(value), 
         bias=boot_mean-res_sub_data[,as.character(Var2)]) %>% ungroup()
@@ -440,9 +438,8 @@ ggplot( melted )+
   geom_hline(aes(yintercept = boot_lowerbound) ,col=2, lwd = 1)+
   geom_hline(aes(yintercept = boot_mean) ,col=2, lwd = 1, lty=3)+
   facet_wrap(~Var2,scales = "free")+
-  xlab("Bootstrap replication")+
-  ylab(TeX("$\\beta$, $R^2$ and \\theta")) +
-  theme(text = element_text(size=14), legend.position = "none")
+  xlab(TeX("$\\beta$, $R^2$ and \\theta")) +
+  theme(text = element_text(size=8), legend.position = "none")
 
 ggplot( melted )+
   geom_histogram(aes(x=value),alpha=.4,col=4,fill="white",bins=25)+
@@ -450,9 +447,8 @@ ggplot( melted )+
   geom_vline(aes(xintercept = boot_lowerbound) ,col=2, lwd = 1)+
   geom_vline(aes(xintercept = boot_mean) ,col=2, lwd = 1, lty=3)+
   facet_wrap(~Var2,scales = "free")+
-  xlab(TeX("$\\beta$ and AIC"))+
-  ylab(TeX("$\\beta$, $R^2$ and \\theta")) +
-  theme(text = element_text(size=14), legend.position = "none")
+  xlab(TeX("$\\beta$, $R^2$ and \\theta")) +
+  theme(text = element_text(size=8), legend.position = "none")
 
 
 ```
