@@ -421,10 +421,10 @@ Compute the jackknife estimate, bias-corrected estimate and standard error
 n0 <- nrow(sub_data)
 
 melted <- reshape2::melt(res_game_jack)
-melted <- melted %>% group_by(Var2) %>% mutate( boot_sd = sqrt((n0-1)/n0*sum(value-mean(value))^2),
-        boot_lowerbound = quantile(value, .025), boot_upperbound = quantile(value, .975),
-        boot_mean = mean(value), 
-        bias=boot_mean-res_sub_data[,as.character(Var2)]) %>% ungroup()
+melted <- melted %>% group_by(Var2) %>% mutate( jack_sd = sqrt((n0-1)/n0*sum(value-mean(value))^2),
+        jack_lowerbound = quantile(value, .025), jack_upperbound = quantile(value, .975),
+        jack_mean = mean(value), 
+        bias=jack_mean-res_sub_data[,as.character(Var2)]) %>% ungroup()
 ```
 
 
@@ -434,18 +434,18 @@ Plot the results
 
 ggplot( melted )+
   geom_point(aes(x=Var1,y=value),alpha=.4,col=4)+
-  geom_hline(aes(yintercept = boot_upperbound) ,col=2, lwd = 1)+
-  geom_hline(aes(yintercept = boot_lowerbound) ,col=2, lwd = 1)+
-  geom_hline(aes(yintercept = boot_mean) ,col=2, lwd = 1, lty=3)+
+  geom_hline(aes(yintercept = jack_upperbound) ,col=2, lwd = 1)+
+  geom_hline(aes(yintercept = jack_lowerbound) ,col=2, lwd = 1)+
+  geom_hline(aes(yintercept = jack_mean) ,col=2, lwd = 1, lty=3)+
   facet_wrap(~Var2,scales = "free")+
   xlab(TeX("$\\beta$, $R^2$ and \\theta")) +
   theme(text = element_text(size=8), legend.position = "none")
 
 ggplot( melted )+
   geom_histogram(aes(x=value),alpha=.4,col=4,fill="white",bins=25)+
-  geom_vline(aes(xintercept = boot_upperbound) ,col=2, lwd = 1)+
-  geom_vline(aes(xintercept = boot_lowerbound) ,col=2, lwd = 1)+
-  geom_vline(aes(xintercept = boot_mean) ,col=2, lwd = 1, lty=3)+
+  geom_vline(aes(xintercept = jack_upperbound) ,col=2, lwd = 1)+
+  geom_vline(aes(xintercept = jack_lowerbound) ,col=2, lwd = 1)+
+  geom_vline(aes(xintercept = jack_mean) ,col=2, lwd = 1, lty=3)+
   facet_wrap(~Var2,scales = "free")+
   xlab(TeX("$\\beta$, $R^2$ and \\theta")) +
   theme(text = element_text(size=8), legend.position = "none")
