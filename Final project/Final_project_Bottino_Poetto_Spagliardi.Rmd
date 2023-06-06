@@ -1,0 +1,247 @@
+---
+title: "Final_project_Bottino_Poetto_Spagliardi"
+author: "Manuel Bottino, Patrick Poetto, Jacopo Spagliardi"
+date: "`r Sys.Date()`"
+
+output:
+  pdf_document: 
+    toc: true
+    number_sections: true
+    latex_engine: pdflatex
+fig_caption: yes
+urlcolor: blue
+header-includes:
+  - \usepackage{amssymb}
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+library(magrittr)
+library(dplyr)
+library(ggplot2)
+library(gridExtra)
+library(ggpubr)
+library(bookdown)
+library(plotly)
+library(rstanarm)
+library(Cairo)
+library(rgl)
+library(plot3D)
+library(effects)
+library(MASS)
+library(car)
+library(faraway)
+library(leaps)
+library(ROCR)
+library(RColorBrewer)
+library(ISLR2)
+library(e1071)
+library(class)
+library(reshape2)
+library(sads)
+library(knitr)
+library(latex2exp)
+library(GGally)
+library(combinat)
+library(superheat)
+library(stringr)
+library(purrr)
+library(tidyr)
+library(lubridate)
+library(ggthemes)
+library(kableExtra)
+library(covr)
+library(doParallel)
+library(foreach)
+library(caret)    # for general model fitting
+library(rpart)    # for fitting decision trees
+library(ipred)    # for fitting bagged decision trees
+library(rpart)
+library(rpart.plot)
+library(tidymodels)
+library(tidyr)
+```
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Review 
+
+### Why it works
+
+### Stability 
+
+### Model - Decision Trees 
+
+theory on clustering criterion: impurità di Gini, entropia di Shannon 
+vedi stat learning (libro pag. 307)
+algoritmo CART
+
+```{r}
+#implementazione CART
+# Definizione della funzione di costo per la suddivisione
+calculate_cost <- function(y) {
+  n <- length(y)
+  mean_squared_error <- sum((y - mean(y))^2) / n
+  return(mean_squared_error)
+}
+
+# Definizione della funzione per la ricerca della miglior suddivisione
+find_best_split <- function(X, y) {
+  best_cost <- Inf
+  best_feature <- NULL
+  best_threshold <- NULL
+
+  for (i in 1:ncol(X)) {
+    feature_values <- unique(X[, i])
+    for (value in feature_values) {
+      left_indices <- X[, i] <= value
+      right_indices <- X[, i] > value
+
+      left_y <- y[left_indices]
+      right_y <- y[right_indices]
+
+      cost <- calculate_cost(left_y) + calculate_cost(right_y)
+
+      if (cost < best_cost) {
+        best_cost <- cost
+        best_feature <- i
+        best_threshold <- value
+      }
+    }
+  }
+
+  return(list(feature = best_feature, threshold = best_threshold))
+}
+
+# Definizione della classe dell'albero di regressione
+class RegressionTree {
+  feature <- NULL
+  threshold <- NULL
+  value <- NULL
+  left_child <- NULL
+  right_child <- NULL
+}
+
+# Definizione della funzione per la costruzione dell'albero di regressione
+build_regression_tree <- function(X, y, max_depth) {
+  if (length(unique(y)) == 1 || max_depth == 0) {
+    leaf <- RegressionTree()
+    leaf$value <- mean(y)
+    return(leaf)
+  }
+
+  split <- find_best_split(X, y)
+  feature <- split$feature
+  threshold <- split$threshold
+
+  left_indices <- X[, feature] <= threshold
+  right_indices <- X[, feature] > threshold
+
+  left_X <- X[left_indices, ]
+  left_y <- y[left_indices]
+
+  right_X <- X[right_indices, ]
+  right_y <- y[right_indices]
+
+  node <- RegressionTree()
+  node$feature <- feature
+  node$threshold <- threshold
+  node$left_child <- build_regression_tree(left_X, left_y, max_depth - 1)
+  node$right_child <- build_regression_tree(right_X, right_y, max_depth - 1)
+
+  return(node)
+}
+
+# Utilizzo dell'algoritmo CART per costruire un albero di regressione
+data <- data.frame(
+  age = c(25, 30, 35, 40),
+  income = c(50000, 60000, 70000, 80000),
+  outcome = c(100, 150, 200, 250)
+)
+
+X <- data[, c("age", "income")]
+y <- data$outcome
+
+max_depth <- 2
+
+tree <- build_regression_tree(X, y, max_depth)
+
+# Stampa dell'albero di regressione
+print(tree)
+
+
+#Questa implementazione crea un albero di regressione utilizzando l'algoritmo CART. Viene utilizzata una funzione di costo basata sull'errore quadratico medio (mean squared error) per valutare la qualità delle suddivisioni. L'albero viene costruito ricorsivamente dividendo i dati in base alle feature e ai valori di soglia che minimizzano il costo.
+
+#Si noti che questa è un'implementazione semplificata a scopo didattico e potrebbe richiedere ulteriori ottimizzazioni e gestione delle eccezioni. Inoltre, è possibile estendere l'algoritmo per affrontare altri aspetti come la gestione di valori mancanti o la potatura dell'albero.
+
+```
+
+visuals
+bagging application - model setting (paragrafo 5+ fig1)
+
+# Data Exploratory Analysis (DEA)
+This data can be used to compare with cancer genes and label these data to predict and diagnose cancers such as breast cancer and also to diagnose the stage of different cancers.
+Also, from the expression of these DNAs, artificial intelligence models can be obtained that can predict future mutations in any disease, or find the mechanisms of protein production and their gene ontology, and treat, diagnose and predict the disease such as cancer.
+
+
+```{r}
+df = 
+  
+
+  
+
+ames_bag1 <- bagging(
+  formula = Sale_Price ~ .,
+  data = ames_train,
+  nbagg = 100,  
+  coob = TRUE,
+  control = rpart.control(minsplit = 2, cp = 0)
+)
+
+
+ames_bag2 <- train(
+  Sale_Price ~ .,
+  data = ames_train,
+  method = "treebag",
+  trControl = trainControl(method = "cv", number = 10),
+  nbagg = 200,  
+  control = rpart.control(minsplit = 2, cp = 0)
+)
+
+
+```
+
+ 
+
+
+```{r}
+####### a caso 
+
+
+# Crea un set di dati di esempio per la regressione
+data <- data.frame(
+  age = c(25, 30, 35, 40),
+  income = c(50000, 60000, 70000, 80000),
+  outcome = c(100, 150, 200, 250)
+)
+
+# Crea un albero di regressione
+tree <- rpart(outcome ~ age + income, data = data)
+
+# Stampa l'albero di regressione
+print(tree)
+rpart.plot(tree)
+
+```
+
+
+
+
+
+
