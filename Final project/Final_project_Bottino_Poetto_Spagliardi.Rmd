@@ -18,50 +18,49 @@ editor_options:
 ---
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
-library(magrittr)
-library(dplyr)
-library(ggplot2)
-library(gridExtra)
-library(ggpubr)
-library(bookdown)
-library(plotly)
-library(rstanarm)
-library(Cairo)
-library(rgl)
-library(plot3D)
-library(effects)
-library(MASS)
-library(car)
-library(faraway)
-library(leaps)
-library(ROCR)
-library(RColorBrewer)
-library(ISLR2)
-library(e1071)
-library(class)
-library(reshape2)
-library(sads)
-library(knitr)
-library(latex2exp)
-library(GGally)
-library(combinat)
-library(superheat)
-library(stringr)
-library(purrr)
-library(tidyr)
-library(lubridate)
-library(ggthemes)
-library(kableExtra)
-library(covr)
-library(doParallel)
-library(foreach)
-library(caret)    # for general model fitting
-library(rpart)    # for fitting decision trees
-library(ipred)    # for fitting bagged decision trees
-library(rpart)
-library(rpart.plot)
-library(tidymodels)
-library(tidyr)
+library(magrittr)     #Pipe operator for easier data manipulation.
+library(dplyr)        #Data manipulation and transformation.
+library(ggplot2)      #Data visualization using the grammar of graphics.
+library(gridExtra)    #Arrange multiple plots on a grid.
+library(ggpubr)       #Extension of ggplot2 for publication-ready graphics.
+library(bookdown)     #Authoring books and documents with R Markdown.
+library(plotly)       #Interactive and web-based visualizations.
+library(rstanarm)     #Bayesian applied regression modeling.
+library(Cairo)        #Graphics device for creating high-quality images.
+library(rgl)          #3D visualization using OpenGL.
+library(plot3D)       #3D scatterplots and surface plots.
+library(effects)      # effects - Effect displays for statistical models.
+library(MASS)         #Functions and datasets for applied statistics.
+library(car)          #Companion to Applied Regression textbook.
+library(faraway)      #Functions and datasets for regression and ANOVA.
+library(leaps)        #Feature selection and regression subset selection.
+library(ROCR)         #Performance evaluation of binary classifiers.
+library(RColorBrewer) #Color palettes for data visualization.
+library(ISLR2)        #Data and functions for the book "A.I.T.S.L.W.A.I.R" 
+library(e1071)        #Various functions for statistical learning/classification.
+library(class)        #Functions for classification.
+library(reshape2)     #Reshape and manipulate data.
+library(sads)         #Species abundance distributions.
+library(knitr)        #Dynamic report generation with R Markdown.
+library(latex2exp)    #LaTeX expressions in plots.
+library(GGally)       #Extension to ggplot2 for matrix-based plots.
+library(combinat)     #Permutations, combinations, and combinatorial datasets.
+library(superheat)    #Heatmaps with improved aesthetics and interactivity.
+library(stringr)      #String manipulation functions.
+library(purrr)        #Functional programming with vectors and lists.
+library(tidyr)        #Tidy data principles for data cleaning.
+library(lubridate)    #Easy handling of dates and times.
+library(ggthemes)     #Additional themes for ggplot2.
+library(kableExtra)   #Create complex tables using 'kable' and 'knitr'.
+library(covr)         #Test coverage reports for R packages.
+library(doParallel)   #Parallel computing using the foreach framework.
+library(foreach)      #Looping construct for iterating over elements.
+library(caret)        #Classification and regression training package.
+library(rpart)        #Recursive partitioning for decision trees.
+library(ipred)        #Improved predictive models.
+library(rpart.plot)   #Plotting decision trees from rpart objects.
+library(tidymodels)   #Tidyverse-style modeling framework.
+library(tidyr)        #Tidy data principles for data cleaning.
 ```
 
 
@@ -236,8 +235,6 @@ tree <- rpart(outcome ~ age + income, data = data)
 
 # Stampa l'albero di regressione
 print(tree)
-rpart.plot(tree)
-
 ```
 
 
