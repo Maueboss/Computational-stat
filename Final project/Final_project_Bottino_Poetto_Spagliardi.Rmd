@@ -1,5 +1,5 @@
 ---
-title: "Final_project_Bottino_Poetto_Spagliardi"
+title: "Final Project: Bagging Predictors"
 author: "Manuel Bottino, Patrick Poetto, Jacopo Spagliardi"
 date: "`r Sys.Date()`"
 
@@ -61,6 +61,7 @@ library(ipred)        #Improved predictive models.
 library(rpart.plot)   #Plotting decision trees from rpart objects.
 library(tidymodels)   #Tidyverse-style modeling framework.
 library(tidyr)        #Tidy data principles for data cleaning.
+library(methods)
 ```
 
 ```{r setup, include=FALSE}
@@ -69,7 +70,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Review
 
-### Why it works
+## Why it works
 First of all let's introduce the general idea of bagging. Given a dataset $L=\{(x_n,y_n),\ n=1, \ldots ,N\}$ we try to improve a predicting procedure in a "naive" way, ideally we would like to have a sequence of datasets $\{L_k\}$ of training sets each containing  N independent observations, then take the average of the sequence $\{\phi(x, L_k)\}$.
 
 \begin{equation}
@@ -91,7 +92,7 @@ In order to understand why bagging works theoretically it can be proved that mea
 This result is true taking advantage of the Jensen’s inequality for the specific case in which $g(X)=X^2$, this function is convex ($g''>0$), thus $E[Z^2] \geq (E[Z])^2$
 
 
-### Instability
+## Instability
 library(bookdown)
 The inequality \@ref(eq:ineq) is a nice starting point to explain what role instability plays. In fact, If $\phi(x, L)$ does not change too much with replicate L the two sides will be nearly equal, and aggregation will not help. The more highly variable the $\phi(x, L)$ are, the more improvement aggregation may produce. Applying this reasoning to our  $\phi_B (x)$, if the procedure is unstable, it can give improvement through aggregation. However, if the procedure is stable, then $\phi_B (x)=\phi_A(x,P_L)$ will not be as accurate for data drawn from $P$ as $\phi_A(X, P) \sim \phi(x,L)$.
 
@@ -120,7 +121,7 @@ r_A=\int_{\pmb x \in C} max_j P(j| \pmb x) P_X(d \pmb x)+ \int_{\pmb x \in C’}
 \end{equation}
 Even if $\phi$ is order correct at $x$ its correct classification rate can be far from optimal, but $\phi_A$ is optimal. Only if $\phi$ is order-correct for most input of x (it is good), then aggregation can transform it into a nearly optimal predictor. On the other hand, unlike the numerical prediction situation, poor predictors can be transformed into worse ones if we use bagging.
 
-### Model - Decision Tree-Based Methods
+## Model - Decision Tree-Based Methods
 
 Tree-based methods partition the feature space into a set of rectangles, and then fit a simple model, say a constant, in each one. This is a simple yet powerful procedure since it is able to disentangle a model into simpler and smaller models and describe his features more accurately than global models do basically using binary conditional clustering. The geometric perspective described before can be seen as a tree where data are run and at each node a test is conducted to see what is the path a covariate should follow until reaching a leaf, which represents the final prediction explained by the constant model. 
 For example, let's say we have $p$ inputs and a response, for each of $N$ observations: that is, $(x_i,y_i)$ for $i = 1,2,...,N$, with $x_i = (x_{i1},x_{i2},...,x_{ip})$. The algorithm has decide on the splitting variables and split points, as well as what shape the tree
@@ -146,18 +147,23 @@ For each $j$, the split point $s$ can be found very quickly and hence determinat
 The question now become: how large should we grow the three? It is pretty straightforward that too many nodes (splits) may overfit the data while doing vice versa may end up not being able to capture them well, resulting in misprediction. One strategy could be to set a lower threshold for the decrease of the sum of squares and stop the splitting when this is reached. However this strategy is too short sighted since a seemingly worthless split may lead to a very good one below. A more robust strategy may be to do kind of the opposite: grow a very large tree and then use a cost-complexity pruning criterion to collapse one internal node at a time from the full tree until the single node tree so that we find a sequence. It is intuitive that the optimal tree must be somewhere in the sequence. Now, with a cross validation selection method, we can find the actual optimal tree just minimizing the cross validated sum of squares. 
 
 This is how the CART algorithm for growing decision trees basically works. Note that decision trees are divided in classification and regression trees if the response is a factor or a numerical or continous variable. 
-Below it is proposed a very basic implementation of a CART algorithm using mean squared error cost complexity criterion. The algorithm is not implemented to prune the tree. 
 
 ```{r eval=FALSE, include=FALSE}
-#implementazione CART
-# Definizione della funzione di costo per la suddivisione
+#Below it is proposed a very basic implementation of a CART algorithm using mean squared error cost complexity criterion. The algorithm is not implemented to prune the tree. 
+
+#CART Algorithm implementation 
+#Defining the cost-complexity function for splitting
 calculate_cost <- function(y) {
+  if (any(is.na(y))) {
+    return(Inf)
+  }
+  
   n <- length(y)
   mean_squared_error <- sum((y - mean(y))^2) / n
   return(mean_squared_error)
 }
 
-# Definizione della funzione per la ricerca della miglior suddivisione
+#Defining optimal splitting research function 
 find_best_split <- function(X, y) {
   best_cost <- Inf
   best_feature <- NULL
@@ -185,16 +191,18 @@ find_best_split <- function(X, y) {
   return(list(feature = best_feature, threshold = best_threshold))
 }
 
-# Definizione della classe dell'albero di regressione
-class RegressionTree {
-  feature <- NULL
-  threshold <- NULL
-  value <- NULL
-  left_child <- NULL
-  right_child <- NULL
-}
+# Defining regression tree class 
+RegressionTree <- setRefClass("RegressionTree",
+  fields = list(
+    feature = "numeric",
+    threshold = "numeric",
+    value = "numeric",
+    left_child = "RegressionTree",
+    right_child = "RegressionTree"
+  )
+)
 
-# Definizione della funzione per la costruzione dell'albero di regressione
+# Defining regression tree building fucntion 
 build_regression_tree <- function(X, y, max_depth) {
   if (length(unique(y)) == 1 || max_depth == 0) {
     leaf <- RegressionTree()
@@ -224,38 +232,70 @@ build_regression_tree <- function(X, y, max_depth) {
   return(node)
 }
 
-# Utilizzo dell'algoritmo CART per costruire un albero di regressione
-data <- data.frame(
-  age = c(25, 30, 35, 40),
-  income = c(50000, 60000, 70000, 80000),
-  outcome = c(100, 150, 200, 250)
-)
+#Regression tree algorithm 
+max_depth <- 6
 
-X <- data[, c("age", "income")]
-y <- data$outcome
-
-max_depth <- 2
-
-tree <- build_regression_tree(X, y, max_depth)
-
-# Stampa dell'albero di regressione
-print(tree)
-
-
-#Questa implementazione crea un albero di regressione utilizzando l'algoritmo CART. Viene utilizzata una funzione di costo basata sull'errore quadratico medio (mean squared error) per valutare la qualità delle suddivisioni. L'albero viene costruito ricorsivamente dividendo i dati in base alle feature e ai valori di soglia che minimizzano il costo.
+tree <- build_regression_tree(X = data[, -8], y = data$pop, max_depth)
 ```
 
-visuals bagging application - model setting (paragrafo 5+ fig1)
+```{r include=FALSE}
+data = readRDS("/Users/pat/Documents/GitHub/Computational-stat/Final project/spot.RDS")
+y = data$pop
+rem = c(5, 6, 7, 8, 10, 11, 12, 16, 17, 18)
+data = data[, -rem]
+
+#New Observation
+new_data <- data.frame(
+  acousticness = median(data$acousticness),
+  danceability = median(data$danceability),  
+  duration_ms = median(data$duration_ms),
+  energy = median(data$energy),
+  loudness = median(data$loudness),
+  speechiness = median(data$speechiness),
+  tempo = median(data$tempo),
+  valence = median(data$valence)
+)
+```
+
+```{r echo=FALSE, fig.height=4.2, fig.width=8}
+#Using function rpart to have a plottable object
+fit <- rpart(y ~ ., data = data, maxdepth = 8)
+rpart.plot(fit, tweak=0.8)
+color_scale <- c("blue", "white") 
+legend(x=0.9, y=0.85, legend = c("High", "Low"), fill = color_scale, 
+       title = "Homogeneity", cex=0.6) 
+
+
+#Making prediction
+predictions <- predict(fit, newdata = new_data)
+```
+
+| Predicted Value | Median Value |
+|-----------------|--------------|
+| `r predictions` | `r median(y)`|
+
+We used the well known Spotify dataset to grow a basic tree with the function "rpart". The thresholds at each node are defined by the algorithm which minimizes the MSE of the model. The color of each nodes represent homogeneity across data which have been classified in a node. Each node show the percentage of observations that it contains and the outcome prediction for that node. 
+Then we used the function "predict" applied to our grown tree to make prediction on a virtual new observation, providing the median of each variable as a new value and getting predicted popularity of a song which have the median as each feature available in the dataset. Not surprisingly, the predicted value for popularity is near the median of the covariate popularity itself. 
+
+
+## Model setup 
+
+Bootstrap aggregating Regression Trees can be done following the procedure proposed by Breiman: 
+
+  1. Randomly divide a real dataset into a 10% test $\mathcal\mathbf({T})$ and a 90% learning set $\mathcal\mathbf({L})$. If the dataset is simulated then we can consider a 15-85 or a 20-80 proportion. 
+  
+  2. Grow a regression tree from $\mathcal\mathbf({L})$ using a 10-fold cross validation, then run $\mathcal\mathbf({T})$ down the tree to obtain the squared error $e_S(\mathcal{L}, \mathcal{T})$. Using che k-folds cross validation means that $\mathcal\mathbf({L})$ is divided into 10 folds, and for each iteration, a regression tree is trained on 9 folds and evaluated on the remaining fold. The process is repeated 10 times, such that each fold is utilized as the test set once. Ultimately, the best model, i.e., the regression tree with the best average performance across all test folds, is selected as the final result. At the end of the 10 iterations, the squared errors obtained for each test fold are used to calculate the mean squared error $e_S(\mathcal{L}, \mathcal{T})$, which represents the average squared difference between the predictions of the regression tree and the actual values of the test set.
+  
+  3. Select a bootstrap sample $\mathcal\mathbf({L})_B$ from $\mathcal\mathbf({L})$ and use it to grow a tree. Then use $\mathcal\mathbf({L})$ to prune the tree avoiding overfitting. Repeat this step 25 times to obtain predictors $\phi_1(\mathbf{x}), ..., \phi_{25}(\mathbf{x})$.
+  
+  4. For $(y_n, \mathbf(x_n)) \in \mathcal\mathbf({T}))$, the bagged predictor will be $\hat{y}_n = av_k\phi_k(\mathbf{x_n})$, and the squared error $e_B(\mathcal{L}, \mathcal{T}) = av_n(y_n-\hat{y}_n)^2$.
+  
+  5. Divide the data into $\mathcal{L}$ and $\mathcal{T}$ for 100 times and average the errors to obtain $\overline{e}_S$ and $\overline{e}_B$.
+
 
 # Data Exploratory Analysis (DEA)
 
-This data can be used to compare with cancer genes and label these data
-to predict and diagnose cancers such as breast cancer and also to
-diagnose the stage of different cancers. Also, from the expression of
-these DNAs, artificial intelligence models can be obtained that can
-predict future mutations in any disease, or find the mechanisms of
-protein production and their gene ontology, and treat, diagnose and
-predict the disease such as cancer.
+This data can be used to compare with cancer genes and label these data to predict and diagnose cancers such as breast cancer and also to diagnose the stage of different cancers. Also, from the expression of these DNAs, artificial intelligence models can be obtained that can predict future mutations in any disease, or find the mechanisms of protein production and their gene ontology, and treat, diagnose and predict the disease such as cancer.
 
 ```{r eval=FALSE, include=FALSE}
 df = 
@@ -284,23 +324,7 @@ ames_bag2 <- train(
 
 ```
 
-```{r eval=FALSE, include=FALSE}
-####### a caso 
 
-
-# Crea un set di dati di esempio per la regressione
-data <- data.frame(
-  age = c(25, 30, 35, 40),
-  income = c(50000, 60000, 70000, 80000),
-  outcome = c(100, 150, 200, 250)
-)
-
-# Crea un albero di regressione
-tree <- rpart(outcome ~ age + income, data = data)
-
-# Stampa l'albero di regressione
-print(tree)
-```
 
 # References
 
