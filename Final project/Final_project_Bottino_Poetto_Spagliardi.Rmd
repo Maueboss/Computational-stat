@@ -61,7 +61,7 @@ library(ipred)        #Improved predictive models.
 library(rpart.plot)   #Plotting decision trees from rpart objects.
 library(tidymodels)   #Tidyverse-style modeling framework.
 library(tidyr)        #Tidy data principles for data cleaning.
-library(methods)
+library(methods)      #Statistical and analytical methods for data analysis.
 ```
 
 ```{r setup, include=FALSE}
