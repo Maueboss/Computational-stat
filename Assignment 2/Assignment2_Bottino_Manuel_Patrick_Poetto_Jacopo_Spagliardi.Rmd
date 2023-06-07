@@ -71,7 +71,7 @@ In the first exercise we deal with a dataset containing different information ab
 - playing time $\rightarrow$ how much a game last in average
 
 ## Point a)
-```{r echo=FALSE, fig.height=3, fig.width=8, warning=FALSE}
+```{r echo=FALSE, fig.height=2, fig.width=6, warning=FALSE}
 df <- readRDS("~/Documents/GitHub/Computational-stat/Assignment 2/games_preprocessed.RDS")
 
 ggplot(data=df, aes(y=playingtime, x=as.factor(minplayers)))+ # I wanted to look at some statistics of playing time,
@@ -113,7 +113,7 @@ df= df[,-1:-2]
 df=data.frame(scale(df))
 ```
 
-```{r fig.width=6}
+```{r fig.width=6, message=FALSE, warning=FALSE}
 sample_cov=cov(df)
 a = cor(df)
 # We can get the same result using cov2cor
@@ -128,9 +128,9 @@ kable(cor_matrix, format = "markdown") %>%
 
 
 ```
-Since we have scaled all the columns with variance equal to 1, this fact implies that the covariance-variance matrix is equal to the correlation matrix.
+Since we have applied scale to all the columns they have both mean equal to 0 and variance equal to 1, the latter implies that the covariance-variance matrix is equal to the correlation matrix. We can always obtain a correlation matrix from a covariance variance matrix, for the simple 2 variable case: $cor(x,y)=\frac{cov(x,y)}{sd(x)sd(y)}$. The two become equal when $sd(y)=sd(x)=1$.
 
-> Source: https://math.stackexchange.com/questions/3780344/under-what-conditions-will-the-covariance-matrix-be-identical-to-the-correlation
+> Source: https://math.stackexchange.com/questions/3780344/under-what-conditions-will-the-covariance-matrix-be-identical-to-the-correlation, https://francish.net/post/difference-between-variance-covariance-and-correlation-matrix/
 
 ## Point c)
 ```{r}
@@ -209,7 +209,7 @@ for(i in 1:6){
 ```
 
 
-```{r echo=FALSE, fig.height=4.5, fig.width=8}
+```{r echo=FALSE, fig.height=4, fig.width=7}
 
 plot_boot_sample_ci = function(row, column){
   ggplot()+
@@ -237,7 +237,7 @@ grid.arrange(plot_boot_sample_ci(1,1),plot_boot_sample_ci(3,2))
 
 ## Point d)
 
-```{r fig.height=3.5, fig.width=7}
+```{r fig.height=3, fig.width=6}
 #We know that these two values are equal, in fact:
 sum(eigen(sample_cov)$values) & sum(diag(sample_cov))
 
