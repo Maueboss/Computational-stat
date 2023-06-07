@@ -70,8 +70,55 @@ knitr::opts_chunk$set(echo = TRUE)
 # Review
 
 ### Why it works
+First of all let's introduce the general idea of bagging. Given a dataset $L=\{(x_n,y_n),\ n=1, \ldots ,N\}$ we try to improve a predicting procedure in a "naive" way, ideally we would like to have a sequence of datasets $\{L_k\}$ of training sets each containing  N independent observations, then take the average of the sequence $\{\phi(x, L_k)\}$.
 
-### Stability
+\begin{equation}
+\phi_A(x,P)=E_L[\phi(x,L)]\label{eq:agg}
+\end{equation}.
+
+Because $\phi_A$ depends not only on x but also the underlying probability distribution $P$ from which L is drawn. Since we are missing this last information the only tool we are left with is our dataset L, we instead use $P_L$ the bootstrap approximation of $P$, it can be defined as the probability mass function with equal probability of extracting each element of the dataset $(x_n,y_n)$. Finally we can define the bootstrap aggregate predictor as:
+
+\begin{equation}
+\phi_B (x)=\phi_A(x,P_L)\label{eq:boot}
+\end{equation}.
+
+In order to understand why bagging works theoretically it can be proved that mean-squared error (MSE) of $\phi_A(x)$ is lower than the mean-squared error averaged over L of $\phi(x,L)$. How much lower the two sides are depends on the inequality: 
+
+\begin{equation}
+[E_L\phi(x,L)]^2\leq E_L\phi^2(x,L)\label{eq:ineq}
+\end{equation}
+
+This result is true taking advantage of the Jensen’s inequality for the specific case in which $g(X)=X^2$, this function is convex ($g''>0$), thus $E[Z^2] \geq (E[Z])^2$
+
+
+### Instability
+library(bookdown)
+The inequality \@ref(eq:ineq) is a nice starting point to explain what role instability plays. In fact, If $\phi(x, L)$ does not change too much with replicate L the two sides will be nearly equal, and aggregation will not help. The more highly variable the $\phi(x, L)$ are, the more improvement aggregation may produce. Applying this reasoning to our  $\phi_B (x)$, if the procedure is unstable, it can give improvement through aggregation. However, if the procedure is stable, then $\phi_B (x)=\phi_A(x,P_L)$ will not be as accurate for data drawn from $P$ as $\phi_A(X, P) \sim \phi(x,L)$.
+
+Let's see how this concept can be translated when we look at a more specific context, like classification. In this instance the predictor $\phi(\pmb x,L)$ predicts a label $j \in \{1,..., J\}$. We first define $Q(j|x)=P(\phi(x,L)=j)$, over many independent replicates of the learning set $L$, $\phi$ predicts class label $j$ at input $x$ with relative frequency $Q(j|x)$, and let $P(j|x)$ be the probability that input x generates class $j$.
+At this point we can set $\phi^*(x)= \arg \max _j P(j|x)$ (the Bayes predictor) which leads to the following expression for $Q (j |x)$:
+
+\[
+\begin{cases}
+1 \ if \ P(j|x)=max_iP(i|x) \\
+0 \ elsewhere
+\end{cases}
+\]
+
+Now we have all the ingredients to show the maximum classification rate where:
+\begin{equation}
+r^*=\int \max_j P(j|x) P_X(dx)\label{eq:class_max}
+\end{equation}
+
+where $P_X(dx)$ is the probability distribution of X.
+
+If we know focus on the aggregate of $\phi$ and define it following the procedure described above $\phi_A(x)=\arg \max_j Q(j|x)$. We have the maximum attainable correct-classification rate of $\phi(x)$, we are missing the corret-classification for x, which for $\phi_A(x)$ is $\sum_j I(\arg \max_j Q(j|x)=j)P(j|x)$ Where $I$ is the indicator function. 
+*Putting all the pieces together* the correct-classification rate for $\phi_A(x)$ is:
+\begin{equation}
+r_A=\int_{\pmb x \in C} max_j P(j| \pmb x) P_X(d \pmb x)+ \int_{\pmb x \in C’} [\sum_j(I(\phi_A(\pmb x)=j)P(j|\pmb x)] P_X(\pmb x)
+\label{eq:class_res}
+\end{equation}
+Even if $\phi$ is order correct at $x$ its correct classification rate can be far from optimal, but $\phi_A$ is optimal. Only if $\phi$ is order-correct for most input of x (it is good), then aggregation can transform it into a nearly optimal predictor. On the other hand, unlike the numerical prediction situation, poor predictors can be transformed into worse ones if we use bagging.
 
 ### Model - Decision Tree-Based Methods
 
