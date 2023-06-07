@@ -93,8 +93,7 @@ This result is true taking advantage of the Jensen’s inequality for the specif
 
 
 ## Instability
-library(bookdown)
-The inequality \@ref(eq:ineq) is a nice starting point to explain what role instability plays. In fact, If $\phi(x, L)$ does not change too much with replicate L the two sides will be nearly equal, and aggregation will not help. The more highly variable the $\phi(x, L)$ are, the more improvement aggregation may produce. Applying this reasoning to our  $\phi_B (x)$, if the procedure is unstable, it can give improvement through aggregation. However, if the procedure is stable, then $\phi_B (x)=\phi_A(x,P_L)$ will not be as accurate for data drawn from $P$ as $\phi_A(X, P) \sim \phi(x,L)$.
+The inequality is a nice starting point to explain what role instability plays. In fact, If $\phi(x, L)$ does not change too much with replicate L the two sides will be nearly equal, and aggregation will not help. The more highly variable the $\phi(x, L)$ are, the more improvement aggregation may produce. Applying this reasoning to our  $\phi_B (x)$, if the procedure is unstable, it can give improvement through aggregation. However, if the procedure is stable, then $\phi_B (x)=\phi_A(x,P_L)$ will not be as accurate for data drawn from $P$ as $\phi_A(X, P) \sim \phi(x,L)$.
 
 Let's see how this concept can be translated when we look at a more specific context, like classification. In this instance the predictor $\phi(\pmb x,L)$ predicts a label $j \in \{1,..., J\}$. We first define $Q(j|x)=P(\phi(x,L)=j)$, over many independent replicates of the learning set $L$, $\phi$ predicts class label $j$ at input $x$ with relative frequency $Q(j|x)$, and let $P(j|x)$ be the probability that input x generates class $j$.
 At this point we can set $\phi^*(x)= \arg \max _j P(j|x)$ (the Bayes predictor) which leads to the following expression for $Q (j |x)$:
