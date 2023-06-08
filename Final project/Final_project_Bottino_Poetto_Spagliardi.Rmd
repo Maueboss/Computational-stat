@@ -62,11 +62,22 @@ library(rpart.plot)   #Plotting decision trees from rpart objects.
 library(tidymodels)   #Tidyverse-style modeling framework.
 library(tidyr)        #Tidy data principles for data cleaning.
 library(methods)      #Statistical and analytical methods for data analysis.
+library(RefManageR)
+bib_data <- ReadBib(file = "Final_references.bib")
 ```
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+
+# References
+
+```{r, results='asis', echo = FALSE}
+options <- BibOptions(bib.style = "authortitle", style = "latex")
+print(bib_data, .opts = options)
+```
+
+\newpage
 
 # Review
 
@@ -128,19 +139,15 @@ should have. Suppose first that we have a partition into $M$ regions $R_1, R_2, 
 
 Now finding the best binary partition in terms of minimum sum of squares is generally computationally infeasible so we can set up a CART (classification and regression tree) algorithm starting with the data, a splitting variable $j$, a split point $s$, and defining the half planes as: $R_1(j,s) = \{X\mid X_j \leq s\}$ and $R_2(j,s) = \{X\mid X_j > s\}$. Then we seek $j$ and $s$ that solve 
 
-```{=latex}
-\begin{center}
-$\underset{j,s}{\min}\left[\underset{c_1}{\min}\sum_{x_i \in R_1(j,s)} (y_i-c_1)^2 + \underset{c_2}{\min} \sum_{x_i \in R_2(j,s)} (y_i-c_2)^2\right]$
-\end{center}
-```
+\begin{equation}
+\underset{j,s}{\min}\left[\underset{c_1}{\min}\sum_{x_i \in R_1(j,s)} (y_i-c_1)^2 + \underset{c_2}{\min} \sum_{x_i \in R_2(j,s)} (y_i-c_2)^2\right]\label{eq:reg}
+\end{equation}
 
 For any choice $j$ and $s$, the inner minimization is solved by: 
 
-```{=latex}
-\begin{center}
-$\hat{c}_1 = \text{av}(y_i \,|\, x_i \in R_1(j, s)) \quad \text{and} \quad \hat{c}_2 = \text{av}(y_i \,|\, x_i \in R_2(j, s))$
-\end{center}
-```
+\begin{equation}
+\hat{c}_1 = \text{av}(y_i \,|\, x_i \in R_1(j, s)) \quad \text{and} \quad \hat{c}_2 = \text{av}(y_i \,|\, x_i \in R_2(j, s))\label{eq:crit}
+\end{equation}
 
 For each $j$, the split point $s$ can be found very quickly and hence determination of the best pair (j, s) is feasible by brute force. Having found the best split, we partition the data into the two resulting regions and repeat the splitting process on each of the two regions. Then this process is repeated on all of the resulting regions.
 The question now become: how large should we grow the three? It is pretty straightforward that too many nodes (splits) may overfit the data while doing vice versa may end up not being able to capture them well, resulting in misprediction. One strategy could be to set a lower threshold for the decrease of the sum of squares and stop the splitting when this is reached. However this strategy is too short sighted since a seemingly worthless split may lead to a very good one below. A more robust strategy may be to do kind of the opposite: grow a very large tree and then use a cost-complexity pruning criterion to collapse one internal node at a time from the full tree until the single node tree so that we find a sequence. It is intuitive that the optimal tree must be somewhere in the sequence. Now, with a cross validation selection method, we can find the actual optimal tree just minimizing the cross validated sum of squares. 
@@ -279,7 +286,7 @@ Then we used the function "predict" applied to our grown tree to make prediction
 
 ## Model setup 
 
-Bootstrap aggregating Regression Trees can be done following the procedure proposed by Breiman: 
+Bootstrap aggregating Regression Trees can be done following the procedure proposed by `r Cite(bib_data, key = "Breiman")`:
 
   1. Randomly divide a real dataset into a 10% test $\mathcal\mathbf({T})$ and a 90% learning set $\mathcal\mathbf({L})$. If the dataset is simulated then we can consider a 15-85 or a 20-80 proportion. 
   
@@ -325,6 +332,3 @@ ames_bag2 <- train(
 
 
 
-# References
-
-knitr::write_bib()
