@@ -61,6 +61,11 @@ library(ipred)        #Improved predictive models.
 library(rpart.plot)   #Plotting decision trees from rpart objects.
 library(tidymodels)   #Tidyverse-style modeling framework.
 library(tidyr)        #Tidy data principles for data cleaning.
+library(e1071)       #for calculating variable importance
+library(caret)       #for general model fitting
+library(rpart)       #for fitting decision trees
+library(ipred)
+library(randomForest)
 ```
 
 ```{r setup, include=FALSE}
@@ -301,6 +306,54 @@ tree <- rpart(outcome ~ age + income, data = data)
 # Stampa l'albero di regressione
 print(tree)
 ```
+
+# Application
+
+```{r}
+ # Load the randomForest package
+
+# Assuming your dataset is named "your_dataset" and the target variable is "Ozone"
+
+# Set the number of trees in the ensemble
+num_trees <- 150
+
+# Set the control parameters for the CART algorithm
+cart_control <- rpart.control(minsplit = 2, cp = 0)
+
+# Apply bagging using randomForest
+bagged_model <- randomForest(Ozone ~ ., data = air, ntree = num_trees, control = cart_control)
+
+# Visualize an individual tree from the bagged ensemble
+individual_tree <- bagged_model$forest[[1]]  # Select the first tree (you can choose any tree from the ensemble)
+
+rpart.plot(individual_tree)
+```
+
+
+Try to replciate the algorithm provided by the paper for regression trees using 10-fold cross-validation
+1. divide in train and test and s
+```{r}
+housing=read.csv("housing.csv")
+colnames(housing)=c('CRIM', 'ZN', 'INDUS', 'CHAS', 'NOX', 'RM', 'AGE', 'DIS', 'RAD', 'TAX', 'PTRATIO', 'B', 'LSTAT', 'MEDV')
+
+ind=sample(1:nrow(housing), nrow(housing))
+nrow(housing)
+
+train= housing[ind[1:as.integer(nrow(housing)*0.90)],]
+
+test= housing[ind[(as.integer(nrow(housing)*0.90)+1):nrow(housing)],]
+
+ctrl <- trainControl(method = "cv", number = 10)
+
+# Train a regression tree using 10-fold cross-validation
+model <- train(MEDV ~ ., data = housing, method = "rpart", trControl = ctrl)
+
+# Print the trained regression tree
+print(model$finalModel)
+
+
+```
+
 
 # References
 
