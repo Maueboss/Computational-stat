@@ -330,11 +330,88 @@ rpart.plot(individual_tree)
 ```
 
 
-Try to replciate the algorithm provided by the paper for regression trees using 10-fold cross-validation
-1. divide in train and test and s
+Try to replicate the algorithm provided by the paper for regression trees using 10-fold cross-validation and bagging
 ```{r}
-housing=read.csv("housing.csv")
-colnames(housing)=c('CRIM', 'ZN', 'INDUS', 'CHAS', 'NOX', 'RM', 'AGE', 'DIS', 'RAD', 'TAX', 'PTRATIO', 'B', 'LSTAT', 'MEDV')
+
+
+# Perform cross-validation
+k_fold_reg_tree= function(df,k, y){
+  formula <- as.formula(paste(y, "~", "."))
+  # 1. take the dataset and divide it into learning and testing (90% - 10%)
+  fold_indices <- sample(cut(seq(1, nrow(df)), breaks = k, labels = FALSE, ordered_result = FALSE))
+  test_indices <- which(fold_indices == i)
+  train_i <- df[-test_indices, ]
+  test_i <- df[test_indices, ]
+  
+  
+  # 2. take the learning set and apply 10-fold cv to find the model with lowest MSE
+  
+  # randomly chose the division of learning and testing as pointed out in fifth point of the algorithm by BBEIMAN
+  fold_indices <- sample(cut(seq(1, nrow(train_i)), breaks = k, labels = FALSE, ordered_result = FALSE))
+  
+  cv_result=100000000000000000000000000
+  
+  for (i in 1:k) {
+
+  
+  # Split the data into training and testing sets
+  test_indices <- which(fold_indices == i)
+  train_data <- train_i[-test_indices, ]
+  test_data <- train_i[test_indices, ]
+  
+  
+  
+  # Train a regression tree on the training set
+  model <- rpart(formula, data = train_data)
+  
+  # Predict the target variable for the testing set
+  predictions <- predict(model, newdata = test_data)
+   
+  
+  #Calculate the evaluation metric (e.g., mean squared errors
+  result <- mean((predictions - test_data[[y]])^2)
+  # 3. For every candidate we compute the MSE compered to the original test
+  
+  if(result<cv_result){
+    cv_result=result
+    # Compare this model with the original test set
+    predictions <- predict(model, newdata = test_i)
+    final_res=mean((predictions - test_i[[y]])^2)
+  }
+  }
+  return(final_res)
+}
+
+reg_tree_boot= function(df,k, y){
+  formula <- as.formula(paste(y, "~", "."))
+  
+  # 1. take the dataset and divide it into learning and testing (90% - 10%)
+  fold_indices <- sample(cut(seq(1, nrow(df)), breaks = k, labels = FALSE, ordered_result = FALSE))
+  test_indices <- which(fold_indices == 10)
+  train_i <- df[-test_indices, ]
+  test_i <- df[test_indices, ]
+  
+  predictions=0
+  
+  # 2. compute 25 predictions with different bootstrap samples
+  for (i in 1:k) {
+  train_data=slice_sample(train_i,n=nrow(train_i), replace=TRUE)
+  model <- rpart(formula, data = train_data)
+  
+  
+  # Predict the target variable for the testing set
+  predictions <- predictions + predict(model, newdata = test_i)
+   
+  }
+  # 3. take the mean of these predictors and compute the MSE
+  predictions=predictions/k
+  final_res=mean((predictions - test_i[[y]])^2)
+  return(final_res)
+}
+
+housing <- read.table("housing.csv", quote="\"", comment.char="")
+colnames(housing)=c('CRIM', 'ZN', 'INDUS', 'CHAS', 'NOX', 'RM', 'AGE', 'DIS',
+                    'RAD', 'TAX', 'PTRATIO', 'B', 'LSTAT', 'MEDV')
 
 ind=sample(1:nrow(housing), nrow(housing))
 nrow(housing)
@@ -342,15 +419,32 @@ nrow(housing)
 train= housing[ind[1:as.integer(nrow(housing)*0.90)],]
 
 test= housing[ind[(as.integer(nrow(housing)*0.90)+1):nrow(housing)],]
+ 
+# Now that we have a function that takes the dataset as input, performs 10-fold cv
+# on the learning set, selects the best fold and use it to make predictions.
+# Only then we can compute the MSE that we are going to use
+e_S_bar=mean(replicate(1000,k_fold_reg_tree(housing,10, "MEDV")))
+e_B_bar=mean(replicate(1000,reg_tree_boot(housing, 25, "MEDV")))
 
-ctrl <- trainControl(method = "cv", number = 10)
+((e_S_bar-e_B_bar)/e_S_bar)*100 # increase
 
-# Train a regression tree using 10-fold cross-validation
-model <- train(MEDV ~ ., data = housing, method = "rpart", trControl = ctrl)
+```
 
-# Print the trained regression tree
-print(model$finalModel)
+Do the same but this time we use libraries that simplifies the coding part a lot
+```{r}
+# Set the number of folds
+k <- 10
+nbagg <- 25
+# Create a control object for 10-fold cross-validation
+ctrl <- trainControl(method = "cv", number = k)
 
+# Train the regression tree using 10-fold cross-validation
+e_S_bar <- mean(replicate(1000,train(MEDV ~ ., data = housing, method = "rpart", trControl = ctrl)$results$RMSE[1]^2))
+e_S_bar=mean(model)
+# Train the bagging model
+e_B_bar <- mean(replicate(1000,train(MEDV ~ ., data = housing, method = "treebag", nbagg = nbagg)$results$RMSE[1]^2))
+
+((e_S_bar-e_B_bar)/e_S_bar)*100 # increase
 
 ```
 
