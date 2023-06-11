@@ -449,6 +449,78 @@ e_B_bar <- mean(replicate(1000,train(MEDV ~ ., data = housing, method = "treebag
 ```
 
 
+# Application
+
+```{r eval=FALSE, include=FALSE}
+# Caricamento del dataset
+# data = 
+
+# Divisione del dataset in set di addestramento e set di test
+set.seed(42)
+train_indices <- sample(1:nrow(data), 0.7 * nrow(data)) # sistemare quanti dati
+train_data <- data[train_indices, ]
+test_data <- data[-train_indices, ]
+
+```
+
+
+```{r eval=FALSE, include=FALSE}
+# Creazione dataset di addestramento -> bootstrap
+n_bootstraps <- 10 # sistemare quanti bootstrap
+train_datasets <- lapply(1:n_bootstraps, function(i) train_data[sample(1:nrow(train_data), replace = TRUE), ])
+
+```
+
+
+```{r eval=FALSE, include=FALSE}
+# Modelli di regressione lineare su ciascun dataset di addestramento
+# models <- map(train_datasets, function(data) lm( ~ ., data = data)) #inserire le variabili
+
+# Calcolo della media dei beta
+coefficients <- lapply(models, coef)
+average_coefficients <- colMeans(do.call(rbind, coefficients))
+
+# final_model <- lm( ~ ., data = train_data)
+ols = final_model
+summary(ols)
+final_model$coefficients <- average_coefficients
+
+
+```
+
+
+```{r eval=FALSE, include=FALSE}
+# Valutazione del modello 
+pred_train = predict(final_model, newdata = train_data)
+# r_squared <- cor(test_data$, pred_train)^2 
+p <- length(final_model$coefficients) - 1
+# n <- length(train_data$) # aggiungi la y
+r_squared_adjusted <- 1 - (1 - r_squared) * (n - 1) / (n - p - 1)
+f_statistic <- (r_squared / p) / ((1 - r_squared) / (n - p - 1))
+p_value <- pf(f_statistic, p, n - p - 1, lower.tail = FALSE)
+# residuals <- train_data$ - predictions
+std_error <- sqrt(sum(residuals^2) / (length(residuals) - length(final_model$coefficients)))
+
+
+```
+
+```{r eval=FALSE, include=FALSE}
+# Valutazione delle prestazioni
+predictions <- predict(final_model, newdata = test_data)
+# r_squared <- cor(test_data$, predictions)^2           
+# n <- length(test_data$) # aggiungi la y                            
+p <- length(final_model$coefficients) - 1
+r_squared_adjusted <- 1 - (1 - r_squared) * (n - 1) / (n - p - 1)
+f_statistic <- (r_squared / p) / ((1 - r_squared) / (n - p - 1))
+p_value <- pf(f_statistic, p, n - p - 1, lower.tail = FALSE)
+# residuals <- test_data$ - predictions
+std_error <- sqrt(sum(residuals^2) / (length(residuals) - length(final_model$coefficients)))
+
+```
+
+
+
+
 # References
 
 knitr::write_bib()
