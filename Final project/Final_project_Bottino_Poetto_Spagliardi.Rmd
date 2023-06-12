@@ -16,6 +16,11 @@ editor_options:
     wrap: 72
 ---
 
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, collapse = TRUE, cache = TRUE)
+```
+
 ```{r message=FALSE, warning=FALSE, include=FALSE}
 library(magrittr)     #Pipe operator for easier data manipulation.
 library(dplyr)        #Data manipulation and transformation.
@@ -66,10 +71,6 @@ library(rpart)        #for fitting decision trees
 library(ipred)        #Improved predictive modeling techniques.
 library(randomForest) #Creating random forest models for prediction.
 library(RefManageR)   #Managing bibliographic references in R.
-```
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, collapse = TRUE)
 ```
 
 # References
