@@ -61,9 +61,9 @@ library(ipred)        #Improved predictive models.
 library(rpart.plot)   #Plotting decision trees from rpart objects.
 library(tidymodels)   #Tidyverse-style modeling framework.
 library(tidyr)        #Tidy data principles for data cleaning.
-library(e1071)       #for calculating variable importance
-library(caret)       #for general model fitting
-library(rpart)       #for fitting decision trees
+library(e1071)        #for calculating variable importance
+library(caret)        #for general model fitting
+library(rpart)        #for fitting decision trees
 library(ipred)
 library(randomForest)
 ```
