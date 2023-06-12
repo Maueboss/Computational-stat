@@ -64,17 +64,28 @@ library(tidyr)        #Tidy data principles for data cleaning.
 library(e1071)        #for calculating variable importance
 library(caret)        #for general model fitting
 library(rpart)        #for fitting decision trees
-library(ipred)
-library(randomForest)
+library(ipred)        #
+library(randomForest) #
+library(RefManageR)   #
 ```
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+# References
+
+```{r echo=FALSE, results='asis'}
+bibliography <- ReadBib("Final_references.bib")
+options <- BibOptions(bib.style = "authoryear", cite.style = "latex")
+print(bibliography, .opts = options)
+```
+
+\newpage
+
 # Review
 
-### Why it works
+## Why it works
 First of all let's introduce the general idea of bagging. Given a dataset $L=\{(x_n,y_n),\ n=1, \ldots ,N\}$ we try to improve a predicting procedure in a "naive" way, ideally we would like to have a sequence of datasets $\{L_k\}$ of training sets each containing  N independent observations, then take the average of the sequence $\{\phi(x, L_k)\}$.
 
 \begin{equation}
@@ -96,8 +107,7 @@ In order to understand why bagging works theoretically it can be proved that mea
 This result is true taking advantage of the Jensen’s inequality for the specific case in which $g(X)=X^2$, this function is convex ($g''>0$), thus $E[Z^2] \geq (E[Z])^2$
 
 
-### Instability
-library(bookdown)
+## Instability
 The inequality \@ref(eq:ineq) is a nice starting point to explain what role instability plays. In fact, If $\phi(x, L)$ does not change too much with replicate L the two sides will be nearly equal, and aggregation will not help. The more highly variable the $\phi(x, L)$ are, the more improvement aggregation may produce. Applying this reasoning to our  $\phi_B (x)$, if the procedure is unstable, it can give improvement through aggregation. However, if the procedure is stable, then $\phi_B (x)=\phi_A(x,P_L)$ will not be as accurate for data drawn from $P$ as $\phi_A(X, P) \sim \phi(x,L)$.
 
 Let's see how this concept can be translated when we look at a more specific context, like classification. In this instance the predictor $\phi(\pmb x,L)$ predicts a label $j \in \{1,..., J\}$. We first define $Q(j|x)=P(\phi(x,L)=j)$, over many independent replicates of the learning set $L$, $\phi$ predicts class label $j$ at input $x$ with relative frequency $Q(j|x)$, and let $P(j|x)$ be the probability that input x generates class $j$.
@@ -125,8 +135,7 @@ r_A=\int_{\pmb x \in C} max_j P(j| \pmb x) P_X(d \pmb x)+ \int_{\pmb x \in C’}
 \end{equation}
 Even if $\phi$ is order correct at $x$ its correct classification rate can be far from optimal, but $\phi_A$ is optimal. Only if $\phi$ is order-correct for most input of x (it is good), then aggregation can transform it into a nearly optimal predictor. On the other hand, unlike the numerical prediction situation, poor predictors can be transformed into worse ones if we use bagging.
 
-### Model - Decision Tree-Based Methods
-
+## Model - Decision Tree-Based Methods
 Tree-based methods partition the feature space into a set of rectangles, and then fit a simple model, say a constant, in each one. This is a simple yet powerful procedure since it is able to disentangle a model into simpler and smaller models and describe his features more accurately than global models do basically using binary conditional clustering. The geometric perspective described before can be seen as a tree where data are run and at each node a test is conducted to see what is the path a covariate should follow until reaching a leaf, which represents the final prediction explained by the constant model. 
 For example, let's say we have $p$ inputs and a response, for each of $N$ observations: that is, $(x_i,y_i)$ for $i = 1,2,...,N$, with $x_i = (x_{i1},x_{i2},...,x_{ip})$. The algorithm has decide on the splitting variables and split points, as well as what shape the tree
 should have. Suppose first that we have a partition into $M$ regions $R_1, R_2, ..., R_M$, and we model the response as a constant $c_m$ in each region: As a criterion for optimal partitional we can minimize the sum of squares $\sum(y_i-f(x_i))^2$. In this way the best $\hat{c}_m$ is just the average of $y_i$ in region $R_m$: $\hat{c}_m=av(y_i | x_i \in R_m)$. Our model will be then: $f(x)=\sum_{m=1}^{M} c_m \cdot I(x \in R_m)$.
@@ -250,6 +259,9 @@ print(tree)
 #Questa implementazione crea un albero di regressione utilizzando l'algoritmo CART. Viene utilizzata una funzione di costo basata sull'errore quadratico medio (mean squared error) per valutare la qualità delle suddivisioni. L'albero viene costruito ricorsivamente dividendo i dati in base alle feature e ai valori di soglia che minimizzano il costo.
 ```
 
+## Model Setup
+Bootstrap aggregating Regression Trees can be done following the procedure proposed by `r Cite(bibliography, key = "Breiman")`:
+
 visuals bagging application - model setting (paragrafo 5+ fig1)
 
 # Data Exploratory Analysis (DEA)
@@ -290,26 +302,7 @@ ames_bag2 <- train(
 ```
 
 ```{r eval=FALSE, include=FALSE}
-####### a caso 
-
-
-# Crea un set di dati di esempio per la regressione
-data <- data.frame(
-  age = c(25, 30, 35, 40),
-  income = c(50000, 60000, 70000, 80000),
-  outcome = c(100, 150, 200, 250)
-)
-
-# Crea un albero di regressione
-tree <- rpart(outcome ~ age + income, data = data)
-
-# Stampa l'albero di regressione
-print(tree)
-```
-
 # Application
-
-```{r}
  # Load the randomForest package
 
 # Assuming your dataset is named "your_dataset" and the target variable is "Ozone"
@@ -329,11 +322,9 @@ individual_tree <- bagged_model$forest[[1]]  # Select the first tree (you can ch
 rpart.plot(individual_tree)
 ```
 
-
 Try to replicate the algorithm provided by the paper for regression trees using 10-fold cross-validation and bagging
-```{r}
 
-
+```{r eval=FALSE, include=FALSE}
 # Perform cross-validation
 k_fold_reg_tree= function(df,k, y){
   formula <- as.formula(paste(y, "~", "."))
@@ -431,7 +422,8 @@ e_B_bar=mean(replicate(1000,reg_tree_boot(housing, 25, "MEDV")))
 ```
 
 Do the same but this time we use libraries that simplifies the coding part a lot
-```{r}
+
+```{r eval=FALSE, include=FALSE}
 # Set the number of folds
 k <- 10
 nbagg <- 25
@@ -521,6 +513,4 @@ std_error <- sqrt(sum(residuals^2) / (length(residuals) - length(final_model$coe
 
 
 
-# References
 
-knitr::write_bib()
