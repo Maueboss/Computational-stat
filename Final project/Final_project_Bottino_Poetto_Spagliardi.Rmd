@@ -77,7 +77,7 @@ library(RefManageR)   #Managing bibliographic references in R.
 
 ```{r echo=FALSE, results='asis'}
 bibliography <- ReadBib("Final_references.bib")
-options <- BibOptions(bib.style = "authoryear", cite.style = "latex")
+options <- BibOptions(bib.style = "numeric", cite.style = "latex")
 print(bibliography, .opts = options)
 ```
 
