@@ -71,6 +71,9 @@ library(rpart)        #for fitting decision trees
 library(ipred)        #Improved predictive modeling techniques.
 library(randomForest) #Creating random forest models for prediction.
 library(RefManageR)   #Managing bibliographic references in R.
+library(mlbench)
+library(xtable)
+library(kableExtra)
 ```
 
 # References
@@ -259,7 +262,7 @@ print(tree)
 #Questa implementazione crea un albero di regressione utilizzando l'algoritmo CART. Viene utilizzata una funzione di costo basata sull'errore quadratico medio (mean squared error) per valutare la qualità delle suddivisioni. L'albero viene costruito ricorsivamente dividendo i dati in base alle feature e ai valori di soglia che minimizzano il costo.
 ```
 
-## Model Setup
+## Algorithm Setup
 Bootstrap aggregating Regression Trees can be done following the procedure proposed by \textbf{`r Cite(bibliography, key = "Breiman")`}:
 
 1. Randomly divide a real dataset into a $10\%$ test $\mathcal{T}$ and a $90\%$ learning set $\mathcal{L}$. If the dataset is simulated then we can consider a $15-85$ or a $20-80$ proportion.
@@ -272,82 +275,46 @@ Bootstrap aggregating Regression Trees can be done following the procedure propo
 
 5. Divide the data into $\mathcal{L}$ and $\mathcal{T}$ for $100$ times and average the errors to obtain $\bar{e}_S$ and $\bar{e}_B$.
 
-# Data Exploratory Analysis (DEA)
-
-This data can be used to compare with cancer genes and label these data to predict and diagnose cancers such as breast cancer and also to diagnose the stage of different cancers. Also, from the expression of these DNAs, artificial intelligence models can be obtained that can predict future mutations in any disease, or find the mechanisms of protein production and their gene ontology, and treat, diagnose and predict the disease such as cancer.
-
-```{r eval=FALSE, include=FALSE}
-df = 
-  
-
-  
-
-ames_bag1 <- bagging(
-  formula = Sale_Price ~ .,
-  data = ames_train,
-  nbagg = 100,  
-  coob = TRUE,
-  control = rpart.control(minsplit = 2, cp = 0)
-)
-
-
-ames_bag2 <- train(
-  Sale_Price ~ .,
-  data = ames_train,
-  method = "treebag",
-  trControl = trainControl(method = "cv", number = 10),
-  nbagg = 200,  
-  control = rpart.control(minsplit = 2, cp = 0)
-)
-
-
-```
-
-```{r eval=FALSE, include=FALSE}
-# Application
- # Load the randomForest package
-
-# Assuming your dataset is named "your_dataset" and the target variable is "Ozone"
-
-# Set the number of trees in the ensemble
-num_trees <- 150
-
-# Set the control parameters for the CART algorithm
-cart_control <- rpart.control(minsplit = 2, cp = 0)
-
-# Apply bagging using randomForest
-bagged_model <- randomForest(Ozone ~ ., data = air, ntree = num_trees, control = cart_control)
-
-# Visualize an individual tree from the bagged ensemble
-individual_tree <- bagged_model$forest[[1]]  # Select the first tree (you can choose any tree from the ensemble)
-
-rpart.plot(individual_tree)
-```
-
+## Application of algorithm
 Try to replicate the algorithm provided by the paper for regression trees using 10-fold cross-validation and bagging
 
-```{r eval=FALSE, include=FALSE}
-# Perform cross-validation
-k_fold_reg_tree= function(df,k, y){
-  formula <- as.formula(paste(y, "~", "."))
-  # 1. take the dataset and divide it into learning and testing (90% - 10%)
-  fold_indices <- sample(cut(seq(1, nrow(df)), breaks = k, labels = FALSE, ordered_result = FALSE))
+```{r}
+# Function that randomize learning and testing datasets, point 5 of algorithm
+# performs this 100 time and only then the author applies both methods (cross validation
+# and bagging). After this he recreates the division and compute the mean squared
+# errors
+random_training_test=function(df,k){
+  fold_indices <- sample(cut(seq(1, nrow(df)), breaks = k, labels = FALSE, 
+                             ordered_result = FALSE))
+  i=sample(1:k, 1)
   test_indices <- which(fold_indices == i)
   train_i <- df[-test_indices, ]
   test_i <- df[test_indices, ]
+  return(list(train_i,test_i))
+}
+
+
+
+k_fold_reg_tree= function(df,k, y){
+  formula <- as.formula(paste(y, "~", "."))
   
+  # 1. take the dataset and divide it into learning and testing (90% - 10%)
+  # which is already done by the function random_training_test
+  train_i=df[[1]]
+  test_i=df[[2]]
   
   # 2. take the learning set and apply 10-fold cv to find the model with lowest MSE
   
-  # randomly chose the division of learning and testing as pointed out in fifth point of the algorithm by BBEIMAN
-  fold_indices <- sample(cut(seq(1, nrow(train_i)), breaks = k, labels = FALSE, ordered_result = FALSE))
+  # In this step we are dividing the training set in 10 folds to apply 10-fold cross validation
+  fold_indices <- sample(cut(seq(1, nrow(train_i)), breaks = k, labels = FALSE, 
+                             ordered_result = FALSE))
   
-  cv_result=100000000000000000000000000
+  cv_result=Inf
   
   for (i in 1:k) {
 
   
-  # Split the data into training and testing sets
+  # Split the data into training and testing sets (10-fold cross validation)
   test_indices <- which(fold_indices == i)
   train_data <- train_i[-test_indices, ]
   test_data <- train_i[test_indices, ]
@@ -367,7 +334,7 @@ k_fold_reg_tree= function(df,k, y){
   
   if(result<cv_result){
     cv_result=result
-    # Compare this model with the original test set
+    # Compute mse of this model using the original test set as comparison
     predictions <- predict(model, newdata = test_i)
     final_res=mean((predictions - test_i[[y]])^2)
   }
@@ -375,19 +342,17 @@ k_fold_reg_tree= function(df,k, y){
   return(final_res)
 }
 
-reg_tree_boot= function(df,k, y){
+reg_tree_boot= function(df,b, y){
   formula <- as.formula(paste(y, "~", "."))
   
   # 1. take the dataset and divide it into learning and testing (90% - 10%)
-  fold_indices <- sample(cut(seq(1, nrow(df)), breaks = k, labels = FALSE, ordered_result = FALSE))
-  test_indices <- which(fold_indices == 10)
-  train_i <- df[-test_indices, ]
-  test_i <- df[test_indices, ]
-  
+  # which is already done by the function 
+  train_i=df[[1]]
+  test_i=df[[2]]
   predictions=0
   
   # 2. compute 25 predictions with different bootstrap samples
-  for (i in 1:k) {
+  for (i in 1:b) {
   train_data=slice_sample(train_i,n=nrow(train_i), replace=TRUE)
   model <- rpart(formula, data = train_data)
   
@@ -397,31 +362,71 @@ reg_tree_boot= function(df,k, y){
    
   }
   # 3. take the mean of these predictors and compute the MSE
-  predictions=predictions/k
+  predictions=predictions/b
   final_res=mean((predictions - test_i[[y]])^2)
   return(final_res)
 }
 
+# I wrote down y instead of the standard MEDV (median of prices) so my lapply below
+# can be computed
 housing <- read.table("housing.csv", quote="\"", comment.char="")
 colnames(housing)=c('CRIM', 'ZN', 'INDUS', 'CHAS', 'NOX', 'RM', 'AGE', 'DIS',
-                    'RAD', 'TAX', 'PTRATIO', 'B', 'LSTAT', 'MEDV')
+                    'RAD', 'TAX', 'PTRATIO', 'B', 'LSTAT', 'y')
 
-ind=sample(1:nrow(housing), nrow(housing))
-nrow(housing)
+# I wrote down y instead of the standard O3 (ozone levels) so my lapply below
+# can be computed
+colnames(ozone)[1]="y"
 
-train= housing[ind[1:as.integer(nrow(housing)*0.90)],]
+fried1=mlbench.friedman1(n=200, sd=1)
+friedman1=data.frame(cbind(fried1$x,fried1$y))
+colnames(friedman1)=c("x_1","x_2","x_3","x_4","x_5","x_6","x_7","x_8","x_9","x_10","y")
 
-test= housing[ind[(as.integer(nrow(housing)*0.90)+1):nrow(housing)],]
- 
+fried2 <- mlbench.friedman2(n = 200)
+friedman2=data.frame(cbind(fried2$x,fried2$y))
+colnames(friedman2)=c("x_1","x_2","x_3","x_4","y")
+
+fried3 <- mlbench.friedman3(n = 200)
+friedman3=data.frame(cbind(fried3$x,fried3$y))
+colnames(friedman3)=c("x_1","x_2","x_3","x_4","y")
+
+
+B=1000
+datasets=list(housing, ozone, friedman1, friedman2, friedman3)
+
+
+# the list in which we will store all of our mse (both from cross validation and
+# bagging) for each dataset, and the decrease in mse (computed below).
+e_bar_global=list()
+
+
 # Now that we have a function that takes the dataset as input, performs 10-fold cv
 # on the learning set, selects the best fold and use it to make predictions.
 # Only then we can compute the MSE that we are going to use
-e_S_bar=mean(replicate(1000,k_fold_reg_tree(housing,10, "MEDV")))
-e_B_bar=mean(replicate(1000,reg_tree_boot(housing, 25, "MEDV")))
+e_bar_global=lapply(datasets, function(data){
+  colMeans(t(replicate(B, {
+  df=random_training_test(data,10)
+  mse_cv=k_fold_reg_tree(df,10,"y")
+  mse_bag=reg_tree_boot(df,25,"y")
+  c(mse_cv, mse_bag)
+})))
+})
 
-((e_S_bar-e_B_bar)/e_S_bar)*100 # increase
+e_bar_global=lapply(e_bar_global, 
+                    function(data){data[3]=((data[1]-data[2])/data[1])*100
+                                  round(data,2)
+  })
 
 ```
+| Dataset name | $\bar{e}_S$ | $\bar{e}_B$ | Decrease| 
+|-----------------|-----------------|--------------|--------------|
+| Boston Housing | `r e_bar_global[[1]][1]` | `r e_bar_global[[1]][2]`| `r e_bar_global[[1]][3]`|
+| Ozone |`r e_bar_global[[2]][1]`| `r e_bar_global[[2]][2]`| `r e_bar_global[[2]][3]`|
+| Friedman #1 | `r e_bar_global[[3]][1]` | `r e_bar_global[[3]][2]`| `r e_bar_global[[3]][3]`|
+| Friedman #2 | `r e_bar_global[[4]][1]` | `r e_bar_global[[4]][2]`| `r e_bar_global[[4]][3]`|
+| Friedman #3 | `r e_bar_global[[5]][1]` | `r e_bar_global[[5]][2]`| `r e_bar_global[[5]][3]`|
+
+
+
 
 Do the same but this time we use libraries that simplifies the coding part a lot
 
@@ -433,10 +438,9 @@ nbagg <- 25
 ctrl <- trainControl(method = "cv", number = k)
 
 # Train the regression tree using 10-fold cross-validation
-e_S_bar <- mean(replicate(1000,train(MEDV ~ ., data = housing, method = "rpart", trControl = ctrl)$results$RMSE[1]^2))
-e_S_bar=mean(model)
+e_S_bar <- mean(replicate(1000,train(MEDV ~ ., data = na.omit(housing), method = "rpart", trControl = ctrl)$results$RMSE[1]^2))
 # Train the bagging model
-e_B_bar <- mean(replicate(1000,train(MEDV ~ ., data = housing, method = "treebag", nbagg = nbagg)$results$RMSE[1]^2))
+e_B_bar <- mean(replicate(1000,train(MEDV ~ ., data = na.omit(housing), method = "treebag", nbagg = nbagg)$results$RMSE[1]^2))
 
 ((e_S_bar-e_B_bar)/e_S_bar)*100 # increase
 
