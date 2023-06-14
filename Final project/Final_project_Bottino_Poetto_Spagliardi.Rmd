@@ -72,8 +72,6 @@ library(ipred)        #Improved predictive modeling techniques.
 library(randomForest) #Creating random forest models for prediction.
 library(RefManageR)   #Managing bibliographic references in R.
 library(mlbench)
-library(xtable)
-library(kableExtra)
 ```
 
 # References
@@ -163,7 +161,45 @@ For each $j$, the split point $s$ can be found very quickly and hence determinat
 The question now become: how large should we grow the three? It is pretty straightforward that too many nodes (splits) may overfit the data while doing vice versa may end up not being able to capture them well, resulting in misprediction. One strategy could be to set a lower threshold for the decrease of the sum of squares and stop the splitting when this is reached. However this strategy is too short sighted since a seemingly worthless split may lead to a very good one below. A more robust strategy may be to do kind of the opposite: grow a very large tree and then use a cost-complexity pruning criterion to collapse one internal node at a time from the full tree until the single node tree so that we find a sequence. It is intuitive that the optimal tree must be somewhere in the sequence. Now, with a cross validation selection method, we can find the actual optimal tree just minimizing the cross validated sum of squares. 
 
 This is how the CART algorithm for growing decision trees basically works. Note that decision trees are divided in classification and regression trees if the response is a factor or a numerical or continous variable. 
-Below it is proposed a very basic implementation of a CART algorithm using mean squared error cost complexity criterion. The algorithm is not implemented to prune the tree. 
+
+```{r include=FALSE}
+data = readRDS("/Users/pat/Documents/GitHub/Computational-stat/Final project/spot.RDS")
+y = data$pop
+rem = c(5, 6, 7, 8, 10, 11, 12, 16, 17, 18)
+data = data[, -rem]
+
+#New Observation
+new_data <- data.frame(
+  acousticness = median(data$acousticness),
+  danceability = median(data$danceability),  
+  duration_ms = median(data$duration_ms),
+  energy = median(data$energy),
+  loudness = median(data$loudness),
+  speechiness = median(data$speechiness),
+  tempo = median(data$tempo),
+  valence = median(data$valence)
+)
+```
+
+```{r echo=FALSE, fig.height=4.2, fig.width=8}
+#Using function rpart to have a plottable object
+fit <- rpart(y ~ ., data = data, maxdepth = 8)
+rpart.plot(fit, tweak=0.8)
+color_scale <- c("blue", "white") 
+legend(x=0.9, y=0.85, legend = c("High", "Low"), fill = color_scale, 
+       title = "Homogeneity", cex=0.6) 
+
+
+#Making prediction
+predictions <- predict(fit, newdata = new_data)
+```
+
+| Predicted Value | Median Value |
+|-----------------|--------------|
+| `r predictions` | `r median(y)`|
+
+We used the well known Spotify dataset to grow a basic tree with the function "rpart". The thresholds at each node are defined by the algorithm which minimizes the MSE of the model. The color of each nodes represent homogeneity across data which have been classified in a node. Each node show the percentage of observations that it contains and the outcome prediction for that node. 
+Then we used the function "predict" applied to our grown tree to make prediction on a virtual new observation, providing the median of each variable as a new value and getting predicted popularity of a song which have the median as each feature available in the dataset. Not surprisingly, the predicted value for popularity is near the median of the covariate popularity itself. 
 
 ```{r eval=FALSE, include=FALSE}
 #implementazione CART
