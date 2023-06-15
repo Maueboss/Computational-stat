@@ -85,6 +85,19 @@ print(bibliography, .opts = options)
 \newpage
 
 # Review
+The underlying idea of bagging is to create multiple instances of the base model (e.g., a decision tree) trained on randomly selected samples of data with replacement (bootstrapping, that's why this technique is also called Bootstrap aggregating). Each base model is trained on subsets of the original data, independently of the others, producing a prediction. The predictions of the individual models are then combined using a majority voting rule (for classification problems) or averaging (for regression problems) to obtain a final prediction. By creating different instances of the base model and combining their predictions, bagging can reduce variability and improve overall predictive performance. Let's see how this type of ensemble technique works:
+\begin{itemize}
+    \item Divide our dataset randomly into two different groups of rows: 
+    \begin{itemize}
+        \item Training Data: the larger part of our group that will be used to produce new datasets.
+        \item Testing Data: the smaller part that will be used to see the performance of our technique.
+    \end{itemize}
+    \item Produce with bootstrap technique new datasets using Training Data. Each bootstrap sample is created by randomly selecting with replacement from the original sample. This means that some rows may be selected multiple times, while others may be excluded to reach the dimension of the original sample. It produced a number $N$ of samples
+    \item Using each sample we produce $N$ models (always the same type of model, for example, linear regression model) that we can call $M_k$ with $k={1, ..., N}$
+    \item Then we can use each model to produce predictions using Testing Data.
+    \item Assembling all the predictions in a democratic way if the variable we are predicting is categorical, and in an averaging way if the variable is continuous
+    \item This assembled prediction is more accurate than the prediction made by the same model but create only uses the original dataset.
+\end{itemize}
 
 ## Why it works
 First of all let's introduce the general idea of bagging. Given a dataset $L=\{(x_n,y_n),\ n=1, \ldots ,N\}$ we try to improve a predicting procedure in a "naive" way, ideally we would like to have a sequence of datasets $\{L_k\}$ of training sets each containing  N independent observations, then take the average of the sequence $\{\phi(x, L_k)\}$.
