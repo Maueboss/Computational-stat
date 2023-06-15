@@ -91,13 +91,13 @@ First of all let's introduce the general idea of bagging. Given a dataset $L=\{(
 
 \begin{equation}
 \phi_A(x,P)=E_L[\phi(x,L)]\label{eq:agg}
-\end{equation}.
+\end{equation}
 
 Because $\phi_A$ depends not only on x but also the underlying probability distribution $P$ from which L is drawn. Since we are missing this last information the only tool we are left with is our dataset L, we instead use $P_L$ the bootstrap approximation of $P$, it can be defined as the probability mass function with equal probability of extracting each element of the dataset $(x_n,y_n)$. Finally we can define the bootstrap aggregate predictor as:
 
 \begin{equation}
 \phi_B (x)=\phi_A(x,P_L)\label{eq:boot}
-\end{equation}.
+\end{equation}
 
 In order to understand why bagging works theoretically it can be proved that mean-squared error (MSE) of $\phi_A(x)$ is lower than the mean-squared error averaged over L of $\phi(x,L)$. How much lower the two sides are depends on the inequality: 
 
@@ -316,14 +316,18 @@ Try to replicate the algorithm provided by the paper for regression trees using 
 
 ```{r}
 # Function that randomize learning and testing datasets, point 5 of algorithm
-# performs this 100 time and only then the author applies both methods (cross validation
-# and bagging). After this he recreates the division and compute the mean squared
-# errors
-random_training_test=function(df,k){
+# performs this 100 time and only then the author applies both methods (cross 
+# validationand bagging). After this he recreates the division and compute the mean
+# squared errors
+
+random_training_test=function(df,k, bin_80_20=0){
   fold_indices <- sample(cut(seq(1, nrow(df)), breaks = k, labels = FALSE, 
                              ordered_result = FALSE))
-  i=sample(1:k, 1)
-  test_indices <- which(fold_indices == i)
+  if (bin_80_20==1) {
+    test_indices <- which(fold_indices == 1 | fold_indices == 2)
+  }else {
+    test_indices <- which(fold_indices == 1)}
+  
   train_i <- df[-test_indices, ]
   test_i <- df[test_indices, ]
   return(list(train_i,test_i))
@@ -341,9 +345,10 @@ k_fold_reg_tree= function(df,k, y){
   
   # 2. take the learning set and apply 10-fold cv to find the model with lowest MSE
   
-  # In this step we are dividing the training set in 10 folds to apply 10-fold cross validation
+  # In this step we are dividing the training set in 10 folds to apply 10-fold 
+  # cross validation
   fold_indices <- sample(cut(seq(1, nrow(train_i)), breaks = k, labels = FALSE, 
-                             ordered_result = FALSE))
+                             ordered_result = FALSE) )
   
   cv_result=Inf
   
@@ -392,9 +397,12 @@ reg_tree_boot= function(df,b, y){
   train_data=slice_sample(train_i,n=nrow(train_i), replace=TRUE)
   model <- rpart(formula, data = train_data)
   
+  # point three of the algorithm is also about pruned trees using the original 
+  # training set
+  pruned_tree <- rpart::prune(model, cp=0.01, newdata=train_i)
   
   # Predict the target variable for the testing set
-  predictions <- predictions + predict(model, newdata = test_i)
+  predictions <- predictions + predict(pruned_tree, newdata = test_i)
    
   }
   # 3. take the mean of these predictors and compute the MSE
@@ -413,20 +421,30 @@ colnames(housing)=c('CRIM', 'ZN', 'INDUS', 'CHAS', 'NOX', 'RM', 'AGE', 'DIS',
 # can be computed
 colnames(ozone)[1]="y"
 
-fried1=mlbench.friedman1(n=200, sd=1)
-friedman1=data.frame(cbind(fried1$x,fried1$y))
+B=100
+
+
+friedman1=t(replicate(B, {
+  fried1=mlbench.friedman1(n=1200, sd=1)
+  data.frame(cbind(fried1$x,fried1$y))}
+  ))
 colnames(friedman1)=c("x_1","x_2","x_3","x_4","x_5","x_6","x_7","x_8","x_9","x_10","y")
 
-fried2 <- mlbench.friedman2(n = 200)
-friedman2=data.frame(cbind(fried2$x,fried2$y))
+friedman2=t(replicate(B, {
+  fried2 <- mlbench.friedman2(n = 1200)
+  data.frame(cbind(fried2$x,fried2$y))}
+  ))
 colnames(friedman2)=c("x_1","x_2","x_3","x_4","y")
 
-fried3 <- mlbench.friedman3(n = 200)
-friedman3=data.frame(cbind(fried3$x,fried3$y))
+friedman3=t(replicate(B, {
+  fried3 <- mlbench.friedman3(n = 1200)
+  data.frame(cbind(fried3$x,fried3$y))}
+  ))
 colnames(friedman3)=c("x_1","x_2","x_3","x_4","y")
 
 
-B=1000
+
+
 datasets=list(housing, ozone, friedman1, friedman2, friedman3)
 
 
@@ -435,12 +453,18 @@ datasets=list(housing, ozone, friedman1, friedman2, friedman3)
 e_bar_global=list()
 
 
+
+
 # Now that we have a function that takes the dataset as input, performs 10-fold cv
 # on the learning set, selects the best fold and use it to make predictions.
 # Only then we can compute the MSE that we are going to use
 e_bar_global=lapply(datasets, function(data){
   colMeans(t(replicate(B, {
-  df=random_training_test(data,10)
+  if (ncol(data)==5 | ncol(data)==11){
+    i=sample(1:B, 1)
+    df=random_training_test(data.frame(data[i,]),10,1)
+  }else{(df=random_training_test(data,10))
+  }
   mse_cv=k_fold_reg_tree(df,10,"y")
   mse_bag=reg_tree_boot(df,25,"y")
   c(mse_cv, mse_bag)
