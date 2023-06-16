@@ -98,6 +98,10 @@ The underlying idea of bagging is to create multiple instances of the base model
     \item Assembling all the predictions in a democratic way if the variable we are predicting is categorical, and in an averaging way if the variable is continuous
     \item This assembled prediction is more accurate than the prediction made by the same model but create only uses the original dataset.
 \end{itemize}
+```{r, echo=FALSE, out.width='50%',  fig.align='center'}
+knitr::include_graphics("Immagine WhatsApp 2023-06-16 ore 14.20.18.jpg")
+```
+
 
 ## Why it works
 First of all let's introduce the general idea of bagging. Given a dataset $L=\{(x_n,y_n),\ n=1, \ldots ,N\}$ we try to improve a predicting procedure in a "naive" way, ideally we would like to have a sequence of datasets $\{L_k\}$ each containing  N independent observations, then take the average of the sequence $\{\phi(x, L_k)\}$.
