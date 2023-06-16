@@ -530,74 +530,19 @@ e_B_bar <- mean(replicate(1000,train(MEDV ~ ., data = na.omit(housing), method =
 ```
 
 
-# Application
+# Conclusion
+The goal of bagging is to reduce the variance of the base model, which is often associated with high receptiveness to the training data. By creating different instances of the base model and combining their predictions, bagging improves overall predictive performance. 
 
-```{r eval=FALSE, include=FALSE}
-# Caricamento del dataset
-# data = 
+It could be applied to different types of models, in particular, we analyze how it works with Decision Tree Based Methods; machine learning algorithms  used for classification and regression tasks that organize the data into a tree-like structure, where each node represents a decision criterion, and each branch corresponds to a possible response or action.
 
-# Divisione del dataset in set di addestramento e set di test
-set.seed(42)
-train_indices <- sample(1:nrow(data), 0.7 * nrow(data)) # sistemare quanti dati
-train_data <- data[train_indices, ]
-test_data <- data[-train_indices, ]
+The procedure proposed by Breiman firstly divides a real dataset in learning (or training) and a test set; grows, on the learning set, regression trees and using cross-validation selects the tree with the best average performance, cut tree to avoid overfitting by using the learning set and repeat this for a large number of division learning-test.
 
-```
+The application of this algorithm to 5 different datasets produces important decreases in the squared errors consistent with the results computed by Breiman himself. The discrepancy will be attributed to small changes in the datasets considered and the use of different machines (Braiman produced these works in 1996)
 
 
-```{r eval=FALSE, include=FALSE}
-# Creazione dataset di addestramento -> bootstrap
-n_bootstraps <- 10 # sistemare quanti bootstrap
-train_datasets <- lapply(1:n_bootstraps, function(i) train_data[sample(1:nrow(train_data), replace = TRUE), ])
-
-```
 
 
-```{r eval=FALSE, include=FALSE}
-# Modelli di regressione lineare su ciascun dataset di addestramento
-# models <- map(train_datasets, function(data) lm( ~ ., data = data)) #inserire le variabili
 
-# Calcolo della media dei beta
-coefficients <- lapply(models, coef)
-average_coefficients <- colMeans(do.call(rbind, coefficients))
-
-# final_model <- lm( ~ ., data = train_data)
-ols = final_model
-summary(ols)
-final_model$coefficients <- average_coefficients
-
-
-```
-
-
-```{r eval=FALSE, include=FALSE}
-# Valutazione del modello 
-pred_train = predict(final_model, newdata = train_data)
-# r_squared <- cor(test_data$, pred_train)^2 
-p <- length(final_model$coefficients) - 1
-# n <- length(train_data$) # aggiungi la y
-r_squared_adjusted <- 1 - (1 - r_squared) * (n - 1) / (n - p - 1)
-f_statistic <- (r_squared / p) / ((1 - r_squared) / (n - p - 1))
-p_value <- pf(f_statistic, p, n - p - 1, lower.tail = FALSE)
-# residuals <- train_data$ - predictions
-std_error <- sqrt(sum(residuals^2) / (length(residuals) - length(final_model$coefficients)))
-
-
-```
-
-```{r eval=FALSE, include=FALSE}
-# Valutazione delle prestazioni
-predictions <- predict(final_model, newdata = test_data)
-# r_squared <- cor(test_data$, predictions)^2           
-# n <- length(test_data$) # aggiungi la y                            
-p <- length(final_model$coefficients) - 1
-r_squared_adjusted <- 1 - (1 - r_squared) * (n - 1) / (n - p - 1)
-f_statistic <- (r_squared / p) / ((1 - r_squared) / (n - p - 1))
-p_value <- pf(f_statistic, p, n - p - 1, lower.tail = FALSE)
-# residuals <- test_data$ - predictions
-std_error <- sqrt(sum(residuals^2) / (length(residuals) - length(final_model$coefficients)))
-
-```
 
 
 
