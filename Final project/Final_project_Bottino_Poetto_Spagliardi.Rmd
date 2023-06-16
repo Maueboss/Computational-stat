@@ -100,7 +100,7 @@ The underlying idea of bagging is to create multiple instances of the base model
 \end{itemize}
 
 ## Why it works
-First of all let's introduce the general idea of bagging. Given a dataset $L=\{(x_n,y_n),\ n=1, \ldots ,N\}$ we try to improve a predicting procedure in a "naive" way, ideally we would like to have a sequence of datasets $\{L_k\}$ of training sets each containing  N independent observations, then take the average of the sequence $\{\phi(x, L_k)\}$.
+First of all let's introduce the general idea of bagging. Given a dataset $L=\{(x_n,y_n),\ n=1, \ldots ,N\}$ we try to improve a predicting procedure in a "naive" way, ideally we would like to have a sequence of datasets $\{L_k\}$ each containing  N independent observations, then take the average of the sequence $\{\phi(x, L_k)\}$.
 
 \begin{equation}
 \phi_A(x,P)=E_L[\phi(x,L)]\label{eq:agg}
@@ -122,7 +122,7 @@ This result is true taking advantage of the Jensen’s inequality for the specif
 
 
 ## Instability
-The inequality \@ref(eq:ineq) is a nice starting point to explain what role instability plays. In fact, If $\phi(x, L)$ does not change too much with replicate L the two sides will be nearly equal, and aggregation will not help. The more highly variable the $\phi(x, L)$ are, the more improvement aggregation may produce. Applying this reasoning to our  $\phi_B (x)$, if the procedure is unstable, it can give improvement through aggregation. However, if the procedure is stable, then $\phi_B (x)=\phi_A(x,P_L)$ will not be as accurate for data drawn from $P$ as $\phi_A(X, P) \sim \phi(x,L)$.
+The inequality \ref{eq:ineq} is a nice starting point to explain what role instability plays. In fact, If $\phi(x, L)$ does not change too much with replicate L the two sides will be nearly equal, and aggregation will not help. The more highly variable the $\phi(x, L)$ are, the more improvement aggregation may produce. Applying this reasoning to our  $\phi_B (x)$, if the procedure is unstable, it can give improvement through aggregation. However, if the procedure is stable, then $\phi_B (x)=\phi_A(x,P_L)$ will not be as accurate for data drawn from $P$ as $\phi_A(X, P) \sim \phi(x,L)$.
 
 Let's see how this concept can be translated when we look at a more specific context, like classification. In this instance the predictor $\phi(\pmb x,L)$ predicts a label $j \in \{1,..., J\}$. We first define $Q(j|x)=P(\phi(x,L)=j)$, over many independent replicates of the learning set $L$, $\phi$ predicts class label $j$ at input $x$ with relative frequency $Q(j|x)$, and let $P(j|x)$ be the probability that input x generates class $j$.
 At this point we can set $\phi^*(x)= \arg \max _j P(j|x)$ (the Bayes predictor) which leads to the following expression for $Q (j |x)$:
@@ -134,14 +134,20 @@ At this point we can set $\phi^*(x)= \arg \max _j P(j|x)$ (the Bayes predictor) 
 \end{cases}
 \]
 
-Now we have all the ingredients to show the maximum classification rate where:
+Now we have all the ingredients to show the maximum classification rate for:
 \begin{equation}
 r^*=\int \max_j P(j|x) P_X(dx)\label{eq:class_max}
 \end{equation}
 
 where $P_X(dx)$ is the probability distribution of X.
 
-If we know focus on the aggregate of $\phi$ and define it following the procedure described above $\phi_A(x)=\arg \max_j Q(j|x)$. We have the maximum attainable correct-classification rate of $\phi(x)$, we are missing the corret-classification for x, which for $\phi_A(x)$ is $\sum_j I(\arg \max_j Q(j|x)=j)P(j|x)$ Where $I$ is the indicator function. 
+Also, call $\phi$ order-correct at the input $\pmb x$ if:
+\begin{equation}
+\arg \max_j Q(j|x)=\arg \max_j P(j|x)=\label{eq:ord_corr}
+\end{equation}
+
+If we now focus on the aggregate of $\phi$ and define it following the procedure described above $\phi_A(x)=\arg \max_j Q(j|x)$. We have the maximum attainable correct-classification rate (accuracy) of $\phi(x)$, we are missing the corret-classification for x, which for $\phi_A(x)$ is $\sum_j I(\arg \max_j Q(j|x)=j)P(j|x)$ Where $I$ is the indicator function.
+
 *Putting all the pieces together* the correct-classification rate for $\phi_A(x)$ is:
 \begin{equation}
 r_A=\int_{\pmb x \in C} max_j P(j| \pmb x) P_X(d \pmb x)+ \int_{\pmb x \in C’} [\sum_j(I(\phi_A(\pmb x)=j)P(j|\pmb x)] P_X(\pmb x)
@@ -176,7 +182,7 @@ The question now become: how large should we grow the tree? It is pretty straigh
 This is how the CART algorithm for growing decision trees basically works. Note that decision trees are divided in classification and regression trees if the response is a factor or a numerical or continous variable. 
 
 ```{r include=FALSE}
-data = readRDS("/Users/pat/Documents/GitHub/Computational-stat/Final project/spot.RDS")
+data = readRDS("spot.RDS")
 y = data$pop
 rem = c(5, 6, 7, 8, 10, 11, 12, 16, 17, 18)
 data = data[, -rem]
@@ -411,7 +417,9 @@ reg_tree_boot= function(df,b, y){
   model <- rpart(formula, data = train_data)
   
   # point three of the algorithm is also about pruned trees using the original 
-  # training set
+  # training set. Determines a nested sequence of subtrees of the supplied rpart
+  # object by recursively snipping off the least important splits, 
+  # based on the complexity parameter (cp).
   pruned_tree <- rpart::prune(model, cp=0.01, newdata=train_i)
   
   # Predict the target variable for the testing set
@@ -434,7 +442,7 @@ colnames(housing)=c('CRIM', 'ZN', 'INDUS', 'CHAS', 'NOX', 'RM', 'AGE', 'DIS',
 # can be computed
 colnames(ozone)[1]="y"
 
-B=100
+B=1
 
 
 friedman1=t(replicate(B, {
@@ -498,6 +506,16 @@ e_bar_global=lapply(e_bar_global,
 | Friedman #2 | `r e_bar_global[[4]][1]` | `r e_bar_global[[4]][2]`| `r e_bar_global[[4]][3]`|
 | Friedman #3 | `r e_bar_global[[5]][1]` | `r e_bar_global[[5]][2]`| `r e_bar_global[[5]][3]`|
 
+
+Original results from \textbf{`r Cite(bibliography, key = "Breiman")`}:
+
+| Dataset name | $\bar{e}_S$ | $\bar{e}_B$ | Decrease| 
+|-----------------|-----------------|--------------|--------------|
+| Boston Housing | 20.0 | 11.6| 42%|
+| Ozone |23.9 | 18.8|  21%|
+| Friedman #1 | 11.4  | 6.1 | 46%|
+| Friedman #2 | 31,100 | 22,100 | 29% |
+| Friedman #3 | .0403  | .0242 | 40%|
 
 
 
