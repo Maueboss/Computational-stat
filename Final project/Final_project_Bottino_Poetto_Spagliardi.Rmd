@@ -312,9 +312,6 @@ tree <- build_regression_tree(X, y, max_depth)
 
 # Stampa dell'albero di regressione
 print(tree)
-
-
-#Questa implementazione crea un albero di regressione utilizzando l'algoritmo CART. Viene utilizzata una funzione di costo basata sull'errore quadratico medio (mean squared error) per valutare la qualità delle suddivisioni. L'albero viene costruito ricorsivamente dividendo i dati in base alle feature e ai valori di soglia che minimizzano il costo.
 ```
 
 ## Algorithm Setup
