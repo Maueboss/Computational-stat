@@ -332,9 +332,8 @@ Try to replicate the algorithm provided by the paper for regression trees using 
 
 ```{r}
 # Function that randomize learning and testing datasets, point 5 of algorithm
-# performs this 100 time and only then the author applies both methods (cross 
-# validationand bagging). After this he recreates the division and compute the mean
-# squared errors
+# performs this 100 time. To each division the author applies both methods (cross 
+# validation and bagging). 
 
 random_training_test=function(df,k, bin_80_20=0){
   fold_indices <- sample(cut(seq(1, nrow(df)), breaks = k, labels = FALSE, 
@@ -359,10 +358,9 @@ k_fold_reg_tree= function(df,k, y){
   train_i=df[[1]]
   test_i=df[[2]]
   
+  
   # 2. take the learning set and apply 10-fold cv to find the model with lowest MSE
   
-  # In this step we are dividing the training set in 10 folds to apply 10-fold 
-  # cross validation
   fold_indices <- sample(cut(seq(1, nrow(train_i)), breaks = k, labels = FALSE, 
                              ordered_result = FALSE) )
   
@@ -385,7 +383,7 @@ k_fold_reg_tree= function(df,k, y){
   predictions <- predict(model, newdata = test_data)
    
   
-  #Calculate the evaluation metric (e.g., mean squared errors
+  #Calculate the evaluation metric (mean squared errors)
   result <- mean((predictions - test_data[[y]])^2)
   # 3. For every candidate we compute the MSE compered to the original test
   
@@ -406,7 +404,7 @@ reg_tree_boot= function(df,b, y){
   # which is already done by the function 
   train_i=df[[1]]
   test_i=df[[2]]
-  predictions=0
+  predictions=rep(0, nrow(test_i))
   
   # 2. compute 25 predictions with different bootstrap samples
   for (i in 1:b) {
@@ -414,8 +412,8 @@ reg_tree_boot= function(df,b, y){
   model <- rpart(formula, data = train_data)
   
   # point three of the algorithm is also about pruned trees using the original 
-  # training set. Determines a nested sequence of subtrees of the supplied rpart
-  # object by recursively snipping off the least important splits, 
+  # training set. the function prune determines a nested sequence of subtrees 
+  # of the supplied rpart object by recursively snipping off the least important splits, 
   # based on the complexity parameter (cp).
   pruned_tree <- rpart::prune(model, cp=0.01, newdata=train_i)
   
@@ -424,7 +422,7 @@ reg_tree_boot= function(df,b, y){
    
   }
   # 3. take the mean of these predictors and compute the MSE
-  predictions=predictions/b
+  predictions<-predictions/b
   final_res=mean((predictions - test_i[[y]])^2)
   return(final_res)
 }
@@ -440,7 +438,6 @@ colnames(housing)=c('CRIM', 'ZN', 'INDUS', 'CHAS', 'NOX', 'RM', 'AGE', 'DIS',
 colnames(ozone)[1]="y"
 
 B=1
-
 
 friedman1=t(replicate(B, {
   fried1=mlbench.friedman1(n=1200, sd=1)
@@ -470,14 +467,11 @@ datasets=list(housing, ozone, friedman1, friedman2, friedman3)
 # bagging) for each dataset, and the decrease in mse (computed below).
 e_bar_global=list()
 
-
-
-
-# Now that we have a function that takes the dataset as input, performs 10-fold cv
-# on the learning set, selects the best fold and use it to make predictions.
-# Only then we can compute the MSE that we are going to use
+# Smart lapply to perform 10-fold cv and bagging for all the datasets
 e_bar_global=lapply(datasets, function(data){
   colMeans(t(replicate(B, {
+  # the only utility of this if is to apply 80-20 instead of 90-10 to the simulated
+  # datasets (friedman from 1 to 3)  
   if (ncol(data)==5 | ncol(data)==11){
     i=sample(1:B, 1)
     df=random_training_test(data.frame(data[i,]),10,1)
@@ -489,6 +483,7 @@ e_bar_global=lapply(datasets, function(data){
 })))
 })
 
+# Smart lapply to compute the decrease in MSE for all of the datasets
 e_bar_global=lapply(e_bar_global, 
                     function(data){data[3]=((data[1]-data[2])/data[1])*100
                                   round(data,2)
