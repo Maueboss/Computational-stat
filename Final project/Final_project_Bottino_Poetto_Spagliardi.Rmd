@@ -98,7 +98,7 @@ The underlying idea of bagging is to create multiple instances of the base model
     \item Assembling all the predictions in a democratic way if the variable we are predicting is categorical, and in an averaging way if the variable is continuous
     \item This assembled prediction is more accurate than the prediction made by the same model but create only uses the original dataset.
 \end{itemize}
-```{r, echo=FALSE, out.width='50%',  fig.align='center'}
+```{r echo=FALSE, fig.align='center', fig.height=4.2, fig.width=8, out.width='100%'}
 knitr::include_graphics("Immagine WhatsApp 2023-06-16 ore 14.20.18.jpg")
 ```
 
@@ -241,6 +241,7 @@ Bootstrap aggregating Regression Trees can be done following the procedure propo
 Try to replicate the algorithm provided by the paper for regression trees using 10-fold cross-validation and bagging
 
 ```{r}
+set.seed(655)
 # Function that randomize learning and testing datasets, point 5 of algorithm
 # performs this 100 time. To each division the author applies both methods (cross 
 # validation and bagging). 
@@ -347,7 +348,7 @@ colnames(housing)=c('CRIM', 'ZN', 'INDUS', 'CHAS', 'NOX', 'RM', 'AGE', 'DIS',
 # can be computed
 colnames(ozone)[1]="y"
 
-B=1
+B=1000
 
 friedman1=t(replicate(B, {
   fried1=mlbench.friedman1(n=1200, sd=1)
@@ -400,6 +401,7 @@ e_bar_global=lapply(e_bar_global,
   })
 
 ```
+
 | Dataset name | $\bar{e}_S$ | $\bar{e}_B$ | Decrease| 
 |-----------------|-----------------|--------------|--------------|
 | Boston Housing | `r e_bar_global[[1]][1]` | `r e_bar_global[[1]][2]`| `r e_bar_global[[1]][3]`|
@@ -419,6 +421,45 @@ Original results from \textbf{`r Cite(bibliography, key = "Breiman")`}:
 | Friedman #2 | 31,100 | 22,100 | 29% |
 | Friedman #3 | .0403  | .0242 | 40%|
 
+\begin{table}[ht]
+\centering
+\begin{tabular}{|p{3cm}|p{3cm}|p{3cm}|p{3cm}|}
+\hline
+\textbf{Dataset name} & $\bar{e}_S$ & $\bar{e}_B$ & \textbf{Decrease} \\
+\hline
+Boston Housing & `r e_bar_global[[1]][1]` & `r e_bar_global[[1]][2]` & `r e_bar_global[[1]][3]` \\
+\hline
+Ozone & `r e_bar_global[[2]][1]` & `r e_bar_global[[2]][2]` & `r e_bar_global[[2]][3]` \\
+\hline
+Friedman #1 & `r e_bar_global[[3]][1]` & `r e_bar_global[[3]][2]` & `r e_bar_global[[3]][3]` \\
+\hline
+Friedman #2 & `r e_bar_global[[4]][1]` & `r e_bar_global[[4]][2]` & `r e_bar_global[[4]][3]` \\
+\hline
+Friedman #3 & `r e_bar_global[[5]][1]` & `r e_bar_global[[5]][2]` & `r e_bar_global[[5]][3]` \\
+\hline
+\end{tabular}
+\end{table}
+
+Original results from \textbf{`r Cite(bibliography, key = "Breiman")`}:
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{|p{3cm}|p{3cm}|p{3cm}|p{3cm}|}
+\hline
+\textbf{Dataset name} & $\bar{e}_S$ & $\bar{e}_B$ & \textbf{Decrease} \\
+\hline
+Boston Housing & 20.0 & 11.6 & 42\% \\
+\hline
+Ozone & 23.9 & 18.8 & 21\% \\
+\hline
+Friedman #1 & 11.4 & 6.1 & 46\% \\
+\hline
+Friedman #2 & 31,100 & 22,100 & 29\% \\
+\hline
+Friedman #3 & .0403 & .0242 & 40\% \\
+\hline
+\end{tabular}
+\end{table}
 
 
 Do the same but this time we use libraries that simplifies the coding part a lot
