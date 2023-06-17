@@ -348,7 +348,7 @@ colnames(housing)=c('CRIM', 'ZN', 'INDUS', 'CHAS', 'NOX', 'RM', 'AGE', 'DIS',
 # can be computed
 colnames(ozone)[1]="y"
 
-B=1
+B=1000
 
 friedman1=t(replicate(B, {
   fried1=mlbench.friedman1(n=1200, sd=1)
@@ -416,16 +416,16 @@ Original results from \textbf{`r Cite(bibliography, key = "Breiman")`}:
 
 | Dataset name | $\bar{e}_S$ | $\bar{e}_B$ | Decrease| 
 |-----------------|-----------------|--------------|--------------|
-| Boston Housing | 20.0 | 11.6| 42%|
-| Ozone |23.9 | 18.8|  21%|
-| Friedman #1 | 11.4  | 6.1 | 46%|
-| Friedman #2 | 31,100 | 22,100 | 29% |
-| Friedman #3 | .0403  | .0242 | 40%|
+| Boston Housing    |    20.0     |    11.6   |    42%                                      |
+| Ozone     |23.9     |    18.8   |     21%|
+| Friedman #1     |    11.4     |    6.1    |     46%                                       |
+| Friedman #2     |    31,100     |    22,100     |    29%                                    |
+| Friedman #3     |    0.0403       |    0.0242     |    40%                                |
 
-
-Do the same but this time we use libraries that simplifies the coding part a lot
 
 ```{r eval=FALSE, include=FALSE}
+#Do the same but this time we use libraries that simplifies the coding part a lot
+
 # Set the number of folds
 k <- 10
 nbagg <- 25
