@@ -348,7 +348,7 @@ colnames(housing)=c('CRIM', 'ZN', 'INDUS', 'CHAS', 'NOX', 'RM', 'AGE', 'DIS',
 # can be computed
 colnames(ozone)[1]="y"
 
-B=1000
+B=1
 
 friedman1=t(replicate(B, {
   fried1=mlbench.friedman1(n=1200, sd=1)
@@ -413,6 +413,7 @@ e_bar_global=lapply(e_bar_global,
 
 Original results from \textbf{`r Cite(bibliography, key = "Breiman")`}:
 
+
 | Dataset name | $\bar{e}_S$ | $\bar{e}_B$ | Decrease| 
 |-----------------|-----------------|--------------|--------------|
 | Boston Housing | 20.0 | 11.6| 42%|
@@ -420,46 +421,6 @@ Original results from \textbf{`r Cite(bibliography, key = "Breiman")`}:
 | Friedman #1 | 11.4  | 6.1 | 46%|
 | Friedman #2 | 31,100 | 22,100 | 29% |
 | Friedman #3 | .0403  | .0242 | 40%|
-
-\begin{table}[ht]
-\centering
-\begin{tabular}{|p{3cm}|p{3cm}|p{3cm}|p{3cm}|}
-\hline
-\textbf{Dataset name} & $\bar{e}_S$ & $\bar{e}_B$ & \textbf{Decrease} \\
-\hline
-Boston Housing & `r e_bar_global[[1]][1]` & `r e_bar_global[[1]][2]` & `r e_bar_global[[1]][3]` \\
-\hline
-Ozone & `r e_bar_global[[2]][1]` & `r e_bar_global[[2]][2]` & `r e_bar_global[[2]][3]` \\
-\hline
-Friedman #1 & `r e_bar_global[[3]][1]` & `r e_bar_global[[3]][2]` & `r e_bar_global[[3]][3]` \\
-\hline
-Friedman #2 & `r e_bar_global[[4]][1]` & `r e_bar_global[[4]][2]` & `r e_bar_global[[4]][3]` \\
-\hline
-Friedman #3 & `r e_bar_global[[5]][1]` & `r e_bar_global[[5]][2]` & `r e_bar_global[[5]][3]` \\
-\hline
-\end{tabular}
-\end{table}
-
-Original results from \textbf{`r Cite(bibliography, key = "Breiman")`}:
-
-\begin{table}[ht]
-\centering
-\begin{tabular}{|p{3cm}|p{3cm}|p{3cm}|p{3cm}|}
-\hline
-\textbf{Dataset name} & $\bar{e}_S$ & $\bar{e}_B$ & \textbf{Decrease} \\
-\hline
-Boston Housing & 20.0 & 11.6 & 42\% \\
-\hline
-Ozone & 23.9 & 18.8 & 21\% \\
-\hline
-Friedman #1 & 11.4 & 6.1 & 46\% \\
-\hline
-Friedman #2 & 31,100 & 22,100 & 29\% \\
-\hline
-Friedman #3 & .0403 & .0242 & 40\% \\
-\hline
-\end{tabular}
-\end{table}
 
 
 Do the same but this time we use libraries that simplifies the coding part a lot
