@@ -61,6 +61,7 @@ library(doParallel)   #Parallel computing using the foreach framework.
 library(foreach)      #Looping construct for iterating over elements.
 library(caret)        #Classification and regression training package.
 library(rpart)        #Recursive partitioning for decision trees.
+library(readxl)       #Read Excle files
 library(ipred)        #Improved predictive models.
 library(rpart.plot)   #Plotting decision trees from rpart objects.
 library(tidymodels)   #Tidyverse-style modeling framework.
@@ -101,7 +102,72 @@ The underlying idea of bagging is to create multiple instances of the base model
 ```{r echo=FALSE, fig.align='center', fig.height=4.2, fig.width=8, out.width='100%'}
 knitr::include_graphics("Immagine WhatsApp 2023-06-16 ore 14.20.18.jpg")
 ```
+There are some scenarios where it may not work or provide significant improvements; for example:
+\begin{itemize}
+    \item When the dataset is small: we need a large training dataset to create different istances of the base model.
+    \item When there is strong dependence among training data: create different istances in this case during bootstrap may not introduce enough diversity. 
+    \item When the predictors are uninformative: bagging may not be able to improve model performance. In fact, bagging could increase the importance of a predictor.
+\end{itemize}
 
+```{r, echo=FALSE}
+data <- read_excel("Dataset.xlsx")
+set.seed(1234)
+```
+\newpage
+```{r}
+ols = lm(cnt ~ ., data = data)
+summary(ols)
+```
+
+Watching this easy example of a linear regression model we immediately see that there are some uninformative predictors, so, as we said a few lines ago, we want to verify that bagging doesn't work very well in this case. 
+
+
+```{r}
+# Devide the dataset
+train_indices <- sample(1:nrow(data), 0.9 * nrow(data)) 
+train_data <- data[train_indices, ]
+test_data <- data[-train_indices, ]
+
+
+# Bootstrap
+n_bootstraps <- 100 
+train_datasets <- lapply(1:n_bootstraps, function(i) train_data[sample(1:nrow(train_data), 
+                                                                       replace = TRUE), ])
+
+# Models
+models <- map(train_datasets, function(data)   lm(cnt ~ ., data = data))
+
+# Extraction of betas
+coefficients <- lapply(models, coef)
+
+# Bagging predictions
+predictions <- list()
+
+for (i in 1:length(models)) {
+  predictions[[i]] <- predict(models[[i]], newdata = test_data)
+}
+
+predictions_bag <- rowMeans(do.call(cbind, predictions))
+
+# Ols predictions
+predictions_ols = predict(ols, newdata = test_data)
+
+# Comparison
+residuals_bag = test_data$cnt - predictions_bag
+residuals_ols <- test_data$cnt - predictions_ols
+
+std_error_ols <- sqrt(sum(residuals_ols^2) /
+                        (length(residuals_ols) - length(ols$coefficients)))
+
+std_error_bag <- sqrt(sum(residuals_bag^2) /
+                        (length(residuals_bag) - length(ols$coefficients)))
+```
+```{r}
+std_error_bag
+std_error_ols
+```
+
+We immediately see that the standard error of the bagging is bigger than the standard error of the predictions produced by the original ols model because of the presence of uninformative predictors.
 
 ## Why it works
 First of all let's introduce the general idea of bagging. Given a dataset $L=\{(x_n,y_n),\ n=1, \ldots ,N\}$ we try to improve a predicting procedure in a "naive" way, ideally we would like to have a sequence of datasets $\{L_k\}$ each containing  N independent observations, then take the average of the sequence $\{\phi(x, L_k)\}$.
