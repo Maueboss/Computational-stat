@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023) (preloaded format=pdflatex 2023.6.12)  18 JUN 2023 11:31
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023) (preloaded format=pdflatex 2023.6.12)  18 JUN 2023 12:29
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -599,43 +599,44 @@ File: Immagine WhatsApp 2023-06-16 ore 14.20.18.jpg Graphic file (type jpg)
 <use Immagine WhatsApp 2023-06-16 ore 14.20.18.jpg>
 Package pdftex.def Info: Immagine WhatsApp 2023-06-16 ore 14.20.18.jpg  used on input line 201.
 (pdftex.def)             Requested size: 469.747pt x 180.55899pt.
-[2{/Users/pat/Library/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-ts1.enc}{/Users/pat/Library/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-mathit.enc}{/Users/pat/Library/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-rm.enc}{/Users/pat/Library/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-mathsy.enc} <./Immagine WhatsApp 2023-06-16 ore 14.20.18.jpg>]
-
-LaTeX Warning: Command \textquoteright invalid in math mode on input line 293.
-
-[3{/Users/pat/Library/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-mathex.enc}]
-<Final_project_Bottino_Poetto_Spagliardi_files/figure-latex/unnamed-chunk-5-1.pdf, id=83, 503.8825pt x 250.9375pt>
-File: Final_project_Bottino_Poetto_Spagliardi_files/figure-latex/unnamed-chunk-5-1.pdf Graphic file (type pdf)
-<use Final_project_Bottino_Poetto_Spagliardi_files/figure-latex/unnamed-chunk-5-1.pdf>
-Package pdftex.def Info: Final_project_Bottino_Poetto_Spagliardi_files/figure-latex/unnamed-chunk-5-1.pdf  used on input line 370.
-(pdftex.def)             Requested size: 469.75917pt x 233.9438pt.
-[4] [5 <./Final_project_Bottino_Poetto_Spagliardi_files/figure-latex/unnamed-chunk-5-1.pdf>]
-LaTeX Font Info:    Trying to load font information for T1+lmtt on input line 441.
+[2{/Users/pat/Library/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-ts1.enc}{/Users/pat/Library/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-mathit.enc}{/Users/pat/Library/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-rm.enc} <./Immagine WhatsApp 2023-06-16 ore 14.20.18.jpg>]
+LaTeX Font Info:    Trying to load font information for T1+lmtt on input line 217.
 (/Users/pat/Library/TinyTeX/texmf-dist/tex/latex/lm/t1lmtt.fd
 File: t1lmtt.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 )
 LaTeX Font Info:    Font shape `T1/lmtt/bx/n' in size <10> not available
-(Font)              Font shape `T1/lmtt/b/n' tried instead on input line 447.
-LaTeX Font Info:    Trying to load font information for TS1+lmtt on input line 542.
+(Font)              Font shape `T1/lmtt/b/n' tried instead on input line 275.
+[3] [4{/Users/pat/Library/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-mathsy.enc}]
+
+LaTeX Warning: Command \textquoteright invalid in math mode on input line 422.
+
+[5{/Users/pat/Library/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-mathex.enc}]
+<Final_project_Bottino_Poetto_Spagliardi_files/figure-latex/unnamed-chunk-9-1.pdf, id=94, 503.8825pt x 250.9375pt>
+File: Final_project_Bottino_Poetto_Spagliardi_files/figure-latex/unnamed-chunk-9-1.pdf Graphic file (type pdf)
+<use Final_project_Bottino_Poetto_Spagliardi_files/figure-latex/unnamed-chunk-9-1.pdf>
+Package pdftex.def Info: Final_project_Bottino_Poetto_Spagliardi_files/figure-latex/unnamed-chunk-9-1.pdf  used on input line 499.
+(pdftex.def)             Requested size: 469.75917pt x 233.9438pt.
+[6] [7 <./Final_project_Bottino_Poetto_Spagliardi_files/figure-latex/unnamed-chunk-9-1.pdf>]
+LaTeX Font Info:    Trying to load font information for TS1+lmtt on input line 671.
 (/Users/pat/Library/TinyTeX/texmf-dist/tex/latex/lm/ts1lmtt.fd
 File: ts1lmtt.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
-) [6]
-Underfull \vbox (badness 10000) detected at line 601
+) [8]
+Underfull \vbox (badness 10000) detected at line 730
  []
 
 
-Underfull \vbox (badness 10000) detected at line 601
+Underfull \vbox (badness 10000) detected at line 730
  []
 
-[7]
-Underfull \vbox (badness 10000) detected at line 601
+[9]
+Underfull \vbox (badness 10000) detected at line 730
  []
 
 
-Underfull \vbox (badness 10000) detected at line 601
+Underfull \vbox (badness 10000) detected at line 730
  []
 
-[8] [9] (./Final_project_Bottino_Poetto_Spagliardi.aux)
+[10] [11] (./Final_project_Bottino_Poetto_Spagliardi.aux)
  ***********
 LaTeX2e <2023-06-01>
 L3 programming layer <2023-06-05>
@@ -644,18 +645,18 @@ Package rerunfilecheck Info: File `Final_project_Bottino_Poetto_Spagliardi.out' 
 (rerunfilecheck)             Checksum: 22A46656A4B33E0361BF28C319319DB5;1056.
  ) 
 Here is how much of TeX's memory you used:
- 13704 strings out of 477695
- 212442 string characters out of 5830954
- 1870759 words of memory out of 5000000
- 33879 multiletter control sequences out of 15000+600000
+ 13708 strings out of 477695
+ 212516 string characters out of 5830954
+ 1871759 words of memory out of 5000000
+ 33881 multiletter control sequences out of 15000+600000
  579461 words of font info for 84 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
  75i,11n,79p,737b,529s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </Users/pat/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmbx10.pfb></Users/pat/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmbx12.pfb></Users/pat/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmbx7.pfb></Users/pat/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmex10.pfb></Users/pat/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmmi10.pfb></Users/pat/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmmi5.pfb></Users/pat/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmmi7.pfb></Users/pat/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr10.pfb></Users/pat/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr12.pfb></Users/pat/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr17.pfb></Users/pat/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr5.pfb></Users/pat/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr7.pfb></Users/pat/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmri10.pfb></Users/pat/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmsy10.pfb></Users/pat/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmsy5.pfb></Users/pat/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmsy7.pfb></Users/pat/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmtk10.pfb></Users/pat/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmtt10.pfb></Users/pat/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmtti10.pfb>
-Output written on Final_project_Bottino_Poetto_Spagliardi.pdf (9 pages, 456107 bytes).
+Output written on Final_project_Bottino_Poetto_Spagliardi.pdf (11 pages, 460989 bytes).
 PDF statistics:
- 246 PDF objects out of 1000 (max. 8388607)
- 187 compressed objects within 2 object streams
- 41 named destinations out of 1000 (max. 500000)
+ 255 PDF objects out of 1000 (max. 8388607)
+ 194 compressed objects within 2 object streams
+ 43 named destinations out of 1000 (max. 500000)
  75 words of extra memory for PDF output out of 10000 (max. 10000000)
 

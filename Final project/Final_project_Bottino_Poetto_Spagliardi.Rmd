@@ -102,10 +102,10 @@ The underlying idea of bagging is to create multiple instances of the base model
 ```{r echo=FALSE, fig.align='center', fig.height=4.2, fig.width=8, out.width='100%'}
 knitr::include_graphics("Immagine WhatsApp 2023-06-16 ore 14.20.18.jpg")
 ```
-There are some scenarios where it may not work or provide significant improvements; for example:
+There are some scenarios in which it may not work or provide significant improvements; for example:
 \begin{itemize}
     \item When the dataset is small: we need a large training dataset to create different istances of the base model.
-    \item When there is strong dependence among training data: create different istances in this case during bootstrap may not introduce enough diversity. 
+    \item When there is strong dependence among training data: create different instances in this case during bootstrap may not introduce enough diversity. 
     \item When the predictors are uninformative: bagging may not be able to improve model performance. In fact, bagging could increase the importance of a predictor.
 \end{itemize}
 
@@ -113,14 +113,15 @@ There are some scenarios where it may not work or provide significant improvemen
 data <- read_excel("Dataset.xlsx")
 set.seed(1234)
 ```
-\newpage
+
+An application example of issues bagging may produce is provided using the bike sharing dataset from the kaggle repository, applied to a simple linear regression problem.
+
 ```{r}
 ols = lm(cnt ~ ., data = data)
 summary(ols)
 ```
 
-Watching this easy example of a linear regression model we immediately see that there are some uninformative predictors, so, as we said a few lines ago, we want to verify that bagging doesn't work very well in this case. 
-
+Watching this naive model example we immediately see that there are some uninformative predictors, so we want to verify if bagging doesn't work very well in this case as expected. 
 
 ```{r}
 # Devide the dataset
@@ -167,7 +168,7 @@ std_error_bag
 std_error_ols
 ```
 
-We immediately see that the standard error of the bagging is bigger than the standard error of the predictions produced by the original ols model because of the presence of uninformative predictors.
+We immediately see that the standard error of the bagged is bigger than the standard error of the predictions produced by the original ols model because of the presence of uninformative predictors.
 
 ## Why it works
 First of all let's introduce the general idea of bagging. Given a dataset $L=\{(x_n,y_n),\ n=1, \ldots ,N\}$ we try to improve a predicting procedure in a "naive" way, ideally we would like to have a sequence of datasets $\{L_k\}$ each containing  N independent observations, then take the average of the sequence $\{\phi(x, L_k)\}$.
@@ -414,7 +415,7 @@ colnames(housing)=c('CRIM', 'ZN', 'INDUS', 'CHAS', 'NOX', 'RM', 'AGE', 'DIS',
 # can be computed
 colnames(ozone)[1]="y"
 
-B=1
+B=1000
 
 friedman1=t(replicate(B, {
   fried1=mlbench.friedman1(n=1200, sd=1)
