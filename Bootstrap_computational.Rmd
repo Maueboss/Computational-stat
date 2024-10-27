@@ -1,5 +1,5 @@
 ---
-title: "Final_project_Bottino_Poetto_Spagliardi"
+title: "Final project for computational statistics"
 author: "Manuel Bottino, Patrick Poetto, Jacopo Spagliardi"
 date: "`r Sys.Date()`"
 output:
@@ -19,6 +19,10 @@ editor_options:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+# set the working directory to the location of the current file
+library(rstudioapi)
+setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+knitr::opts_knit$set(root.dir = dirname(rstudioapi::getSourceEditorContext()$path))
 ```
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
@@ -31,8 +35,8 @@ library(bookdown)     #Authoring books and documents with R Markdown.
 library(plotly)       #Interactive and web-based visualizations.
 library(rstanarm)     #Bayesian applied regression modeling.
 library(Cairo)        #Graphics device for creating high-quality images.
-library(rgl)          #3D visualization using OpenGL.
-library(plot3D)       #3D scatterplots and surface plots.
+# library(rgl)          #3D visualization using OpenGL.
+# library(plot3D)       #3D scatterplots and surface plots.
 library(effects)      # effects - Effect displays for statistical models.
 library(MASS)         #Functions and datasets for applied statistics.
 library(car)          #Companion to Applied Regression textbook.
@@ -78,7 +82,7 @@ library(mlbench)      #Tables stuff
 # References
 
 ```{r echo=FALSE, results='asis'}
-bibliography <- ReadBib("Final_references.bib")
+bibliography <- ReadBib("bib/References.bib")
 options <- BibOptions(bib.style = "numeric", cite.style = "latex")
 print(bibliography, .opts = options)
 ```
@@ -100,7 +104,7 @@ The underlying idea of bagging is to create multiple instances of the base model
     \item This assembled prediction is more accurate than the prediction made by the same model but create only uses the original dataset.
 \end{itemize}
 ```{r echo=FALSE, fig.align='center', fig.height=4.2, fig.width=8, out.width='100%'}
-knitr::include_graphics("Immagine WhatsApp 2023-06-16 ore 14.20.18.jpg")
+knitr::include_graphics("pictures/bootstrap.jpg")
 ```
 There are some scenarios in which it may not work or provide significant improvements; for example:
 \begin{itemize}
@@ -110,7 +114,7 @@ There are some scenarios in which it may not work or provide significant improve
 \end{itemize}
 
 ```{r, echo=FALSE}
-data <- read_excel("Dataset.xlsx")
+data <- read_excel("data/Dataset.xlsx")
 set.seed(1234)
 ```
 
@@ -163,6 +167,8 @@ std_error_ols <- sqrt(sum(residuals_ols^2) /
 std_error_bag <- sqrt(sum(residuals_bag^2) /
                         (length(residuals_bag) - length(ols$coefficients)))
 ```
+
+
 ```{r}
 std_error_bag
 std_error_ols
@@ -253,7 +259,7 @@ The question now become: how large should we grow the tree? It is pretty straigh
 This is how the CART algorithm for growing decision trees basically works. Note that decision trees are divided in classification and regression trees if the response is a factor or a numerical or continous variable. 
 
 ```{r include=FALSE}
-data = readRDS("spot.RDS")
+data = readRDS("data/spot.RDS")
 y = data$pop
 rem = c(5, 6, 7, 8, 10, 11, 12, 16, 17, 18)
 data = data[, -rem]
@@ -407,7 +413,7 @@ reg_tree_boot= function(df,b, y){
 
 # I wrote down y instead of the standard MEDV (median of prices) so my lapply below
 # can be computed
-housing <- read.table("housing.csv", quote="\"", comment.char="")
+housing <- read.table("data/housing.csv", quote="\"", comment.char="")
 colnames(housing)=c('CRIM', 'ZN', 'INDUS', 'CHAS', 'NOX', 'RM', 'AGE', 'DIS',
                     'RAD', 'TAX', 'PTRATIO', 'B', 'LSTAT', 'y')
 
